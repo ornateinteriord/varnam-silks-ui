@@ -37,6 +37,7 @@ const defaultColumns: Column[] = [
   { key: 'status', label: 'Status' },
   { key: 'action', label: 'Action' },
 ];
+// ok
 
 const AccountDetailsTable: React.FC<Props> = ({ title = 'Account Details', columns = defaultColumns, data = [] }) => {
   const [search, setSearch] = useState('');
