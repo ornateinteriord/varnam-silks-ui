@@ -30,8 +30,8 @@ const EcommerceNavbar = () => {
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-      <Typography variant="h6" sx={{ my: 2, fontWeight: 'bold', color: '#b30000' }}>
-        VARNAM SILKS
+      <Typography variant="h6" sx={{ my: 2, fontWeight: 'bold', color: '#b90707ff' }}>
+        VARNAM SILKS 
       </Typography>
       <List>
         {navItems.map((item) => (
@@ -54,23 +54,30 @@ const EcommerceNavbar = () => {
               </IconButton>
             )}
             
-            <Typography variant="h5" sx={{ fontWeight: 'bold', letterSpacing: 1, color: '#b30000', flexGrow: { xs: 1, md: 0 }, textTransform: 'uppercase', cursor: 'pointer' }}>
+            <Typography variant="h5" sx={{ fontWeight: 'bold', letterSpacing: 1, color: '#800080', flexGrow: { xs: 1, md: 0 }, textTransform: 'uppercase', cursor: 'pointer' }}>
               Varnam Silks
             </Typography>
 
             {!isMobile && (
               <Box sx={{ display: 'flex', gap: 3 }}>
                 {navItems.map((item) => (
-                  <Button key={item} sx={{ color: '#333', fontWeight: 600, '&:hover': { color: '#b30000' } }}>
+                  <Button key={item} sx={{ color: '#333', fontWeight: 600, '&:hover': { color: '#800080' } }}>
                     {item}
                   </Button>
                 ))}
               </Box>
             )}
 
-            <IconButton sx={{ color: '#333' }}>
-              <ShoppingCartIcon />
-            </IconButton>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {!isMobile && (
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#800080' }}>
+                  📞 +91 98765 43210
+                </Typography>
+              )}
+              <IconButton sx={{ color: '#333' }}>
+                <ShoppingCartIcon />
+              </IconButton>
+            </Box>
           </Toolbar>
         </Container>
       </AppBar>

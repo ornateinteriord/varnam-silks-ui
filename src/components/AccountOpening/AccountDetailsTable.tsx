@@ -45,6 +45,7 @@ const AccountDetailsTable: React.FC<Props> = ({ title = 'Account Details', colum
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+ 
 
   const filtered = useMemo(() => {
     if (!search && !fromDate && !toDate) return data;
