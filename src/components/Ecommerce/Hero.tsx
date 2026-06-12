@@ -23,7 +23,7 @@ const Hero = () => {
           <Typography variant="h5" sx={{ mb: 4, textShadow: '1px 1px 2px rgba(0,0,0,0.5)', fontSize: { xs: '1.2rem', md: '1.5rem' } }}>
             Discover the elegance of traditional and modern sarees
           </Typography>
-          <Button variant="contained" size="large" sx={{ backgroundColor: '#b30000', '&:hover': { backgroundColor: '#800000' }, px: 4, py: 1.5, fontSize: '1.1rem' }}>
+          <Button onClick={() => window.open('https://varnamsilks.com', '_blank')} variant="contained" size="large" sx={{ backgroundColor: '#b30000', '&:hover': { backgroundColor: '#800000' }, px: 4, py: 1.5, fontSize: '1.1rem' }}>
             Shop Now
           </Button>
         </Box>

@@ -14,7 +14,9 @@ const categories = [
 ];
 
 const CategoryTile = ({ category }: { category: any }) => (
-  <Box sx={{ 
+  <Box 
+    onClick={() => window.open('https://varnamsilks.com', '_blank')}
+    sx={{ 
     position: 'relative', 
     height: '100%',
     width: '100%',

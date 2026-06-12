@@ -18,12 +18,12 @@ const EcommerceFooter = () => {
           {/* Column 2: Quick Links */}
           <Grid item xs={12} sm={6} md={2}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, fontSize: '1rem' }}>
-              QUICK LINKS
+              COMPANY
             </Typography>
             <List disablePadding>
-              {['Home', 'About Us', 'Contact Us', 'Our Collections', 'Track Order'].map((link) => (
+              {['About Us', 'Contact Us'].map((link) => (
                 <ListItem key={link} disablePadding sx={{ mb: 1 }}>
-                  <Typography component="a" href="#" sx={{ color: '#aaa', textDecoration: 'none', '&:hover': { color: '#fff' }, fontSize: '0.9rem', cursor: 'pointer' }}>
+                  <Typography component="a" sx={{ color: '#aaa', textDecoration: 'none', '&:hover': { color: '#fff' }, fontSize: '0.9rem', cursor: 'pointer' }}>
                     {link}
                   </Typography>
                 </ListItem>
@@ -34,12 +34,12 @@ const EcommerceFooter = () => {
           {/* Column 3: Customer Policies */}
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, fontSize: '1rem' }}>
-              CUSTOMER POLICIES
+              POLICIES
             </Typography>
             <List disablePadding>
-              {['Privacy Policy', 'Refund Policy', 'Shipping Policy', 'Terms of Service', 'FAQ'].map((link) => (
+              {['Terms and Conditions', 'Privacy Policy', 'Shipping and Return Policy', 'Refund Policy'].map((link) => (
                 <ListItem key={link} disablePadding sx={{ mb: 1 }}>
-                  <Typography component="a" href="#" sx={{ color: '#aaa', textDecoration: 'none', '&:hover': { color: '#fff' }, fontSize: '0.9rem', cursor: 'pointer' }}>
+                  <Typography component="a" sx={{ color: '#aaa', textDecoration: 'none', '&:hover': { color: '#fff' }, fontSize: '0.9rem', cursor: 'pointer' }}>
                     {link}
                   </Typography>
                 </ListItem>

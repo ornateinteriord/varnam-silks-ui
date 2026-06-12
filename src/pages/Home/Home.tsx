@@ -3,7 +3,7 @@ import EcommerceNavbar from '../../components/Ecommerce/EcommerceNavbar';
 import Hero from '../../components/Ecommerce/Hero';
 import CategoryBento from '../../components/Ecommerce/CategoryBento';
 import Features from '../../components/Ecommerce/Features';
-// import EcommerceFooter from '../../components/Ecommerce/EcommerceFooter';
+import EcommerceFooter from '../../components/Ecommerce/EcommerceFooter';
 
 const Home = () => {
   return (
@@ -12,7 +12,7 @@ const Home = () => {
       <Hero />
       <CategoryBento />
       <Features />
-      {/* <EcommerceFooter /> */}
+      <EcommerceFooter />
     </Box>
   );
 };
