@@ -57,6 +57,7 @@ const Contact = lazy(() => import("./pages/Contact/Contact"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms/Terms"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy/RefundPolicy"));
+const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy/ShippingPolicy"));
 
 // admin pages
 const UpdatePassword = lazy(() => import("./pages/Admin-Pages/admin-panel/UpdatePassword"));
@@ -341,6 +342,7 @@ const RoutesProvider = ({
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
             {/* admin routes */}
 
             <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>

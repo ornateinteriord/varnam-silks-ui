@@ -5,7 +5,7 @@ import AccountOpeningForm from '../../../../components/AccountOpening/AccountOpe
 const RDOpening: React.FC = () => {
   return (
     <div style={{ marginTop: 8 }}>
-      <AccountOpeningForm defaultAccountType="RD" title="RD Account Opening" />
+      <AccountOpeningForm defaultAccountType="RD" title="Deposit" />
     </div>
   );
 };

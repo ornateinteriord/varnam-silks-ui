@@ -376,7 +376,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "Cash Transaction", path: "/admin/banking/cash-transaction", icon: <LucideIcons.IndianRupee /> },
     ],
   },
-  {
+  /* {
     name: "SB Account",
     icon: <LucideIcons.Wallet />,
     isExpandable: true,
@@ -385,8 +385,8 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "Search SB A/C", path: "/SBaccount/search-sb-acc", icon: <LucideIcons.Search /> },
       { name: "Close SB", path: "/SBaccount/close-sb", icon: <LucideIcons.XCircle /> },
     ],
-  },
-  {
+  }, */
+  /* {
     name: "CA Account",
     icon: <CreditCardIcon />,
     isExpandable: true,
@@ -395,9 +395,9 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "Search CA A/C", path: "/CAaccount/search-ca-acc", icon: <LucideIcons.Search /> },
       { name: "Close CA", path: "/CAaccount/close-ca", icon: <LucideIcons.XCircle /> },
     ],
-  },
+  }, */
   {
-    name: "Recurring Deposit",
+    name: "Deposit",
     icon: <LucideIcons.RefreshCcw />,
     isExpandable: true,
     subItems: [
@@ -408,7 +408,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "RD Calculator", path: "/banking/rd-calculator", icon: <LucideIcons.Calculator /> },
     ],
   },
-  {
+  /* {
     name: "Fixed Deposit",
     icon: <LockIcon />,
     isExpandable: true,
@@ -419,7 +419,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "Pay Maturity", path: "/banking/fd-pay-maturity", icon: <PaymentsIcon /> },
       { name: "FD Calculator", path: "/banking/fd-calculator", icon: <LucideIcons.Calculator /> },
     ],
-  },
+  }, */
   {
     name: "PIGMY",
     icon: <LucideIcons.PiggyBank />,

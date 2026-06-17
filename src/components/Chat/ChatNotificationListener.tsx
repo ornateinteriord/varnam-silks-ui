@@ -1,18 +1,18 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { initializeSocket } from '../../utils/socket';
+// import { toast } from 'react-toastify';
+// import { initializeSocket } from '../../utils/socket';
 import useAuth from '../../hooks/use-auth';
-import { Box, Typography, Avatar } from '@mui/material';
+// import { Box, Typography, Avatar } from '@mui/material';
 
 // Define the shape of the notification data
-interface NotificationPayload {
+/* interface NotificationPayload {
     roomId: string;
     senderId: string;
     senderName: string;
     text: string;
     senderProfileImage?: string;
-}
+} */
 
 const ChatNotificationListener: React.FC = () => {
     const { isLoggedIn } = useAuth();
@@ -35,6 +35,10 @@ const ChatNotificationListener: React.FC = () => {
     useEffect(() => {
         if (!isLoggedIn) return;
 
+        // Chat functionality is disabled to prevent 404 errors polling in the background
+        return;
+
+        /*
         const socket = initializeSocket();
 
         if (!socket.connected) {
@@ -123,9 +127,10 @@ const ChatNotificationListener: React.FC = () => {
         return () => {
             socket.off('new_message_notification', handleNewMessageNotification);
         };
+        */
     }, [isLoggedIn, location.pathname, navigate, activeRoomId]);
 
-    const playNotificationSound = () => {
+    /* const playNotificationSound = () => {
         try {
             const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
@@ -143,7 +148,7 @@ const ChatNotificationListener: React.FC = () => {
         } catch (e) {
             console.error('Audio play failed', e);
         }
-    };
+    }; */
 
     return null;
 };

@@ -290,7 +290,7 @@ const AccountOpeningForm: React.FC<Props> = ({
         }
 
         return name.startsWith(search) ||
-          (search === 'RD' && name.includes('RECURRING')) ||
+          (search === 'RD' && (name.includes('RECURRING') || name.includes('DEPOSIT') || name === 'RD')) ||
           (search === 'FD' && name.includes('FIXED')) ||
           (search === 'CA' && name.includes('CURRENT')) ||
           (search === 'CUR' && name.includes('CURRENT')) ||
@@ -511,7 +511,7 @@ const AccountOpeningForm: React.FC<Props> = ({
         branch_id: memberInfo.branch_id,
         date_of_opening: form.openingDate,
         member_id: memberId,
-        account_type: accountGroupId, // Send account_group_id
+        account_type: accountGroupId || (isRD ? 'AGP002' : form.accountType), // Send account_group_id
         account_operation: form.accountOperation,
         introducer: form.introducer,
         entered_by: memberInfo.entered_by || '', // From logged-in user
@@ -552,7 +552,8 @@ const AccountOpeningForm: React.FC<Props> = ({
     }
   };
 
-  const showInterestFields = ['RD', 'FD', 'PIGMY', 'MIS'].includes(form.accountType);
+  const isRD = form.accountType === 'RD';
+  const showInterestFields = ['FD', 'PIGMY', 'MIS'].includes(form.accountType);
   const interests = interestsData?.data || [];
 
   return (
@@ -573,7 +574,7 @@ const AccountOpeningForm: React.FC<Props> = ({
           fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
         }}
       >
-        {title ?? `${form.accountType} Account Opening`}
+        {title ?? (isRD ? 'Deposit' : `${form.accountType} Account Opening`)}
       </Typography>
       <Card sx={{
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -831,7 +832,6 @@ const AccountOpeningForm: React.FC<Props> = ({
                     </FormControl>
                   </Grid>
 
-                  {/* Conditional Joint Member Field */}
                   {form.accountOperation === 'Any two' && (
                     <Grid item xs={12}>
                       <TextField
@@ -860,6 +860,38 @@ const AccountOpeningForm: React.FC<Props> = ({
                       sx={accountInputStyle}
                     />
                   </Grid>
+
+                  {isRD && (
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth size="small" sx={accountInputStyle}>
+                        <InputLabel id="deposit-slab-label">Deposit Slab</InputLabel>
+                        <Select
+                          labelId="deposit-slab-label"
+                          label="Deposit Slab"
+                          value={form.interestSlab}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            let maturity = '';
+                            if (val === '1000') maturity = '14000';
+                            if (val === '2000') maturity = '28000';
+                            if (val === '3000') maturity = '42000';
+                            
+                            setForm((prev: any) => ({
+                              ...prev,
+                              interestSlab: val,
+                              amount: val,
+                              maturityValue: maturity
+                            }));
+                          }}
+                        >
+                          <MenuItem value="">Select Deposit Slab</MenuItem>
+                          <MenuItem value="1000">1000(1yr)</MenuItem>
+                          <MenuItem value="2000">2000(1yr)</MenuItem>
+                          <MenuItem value="3000">3000(1yr)</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  )}
 
                   {showInterestFields && (
                     <>
@@ -915,9 +947,23 @@ const AccountOpeningForm: React.FC<Props> = ({
                       type="number"
                       value={form.amount}
                       onChange={(e) => handleChange('amount', e.target.value)}
-                      sx={accountInputStyle}
+                      InputProps={{ readOnly: isRD }} // Auto-filled for RD
+                      sx={isRD ? readOnlyInputStyle : accountInputStyle}
                     />
                   </Grid>
+
+                  {isRD && (
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        label="Maturity Value"
+                        fullWidth
+                        size="small"
+                        value={form.maturityValue}
+                        InputProps={{ readOnly: true }}
+                        sx={readOnlyInputStyle}
+                      />
+                    </Grid>
+                  )}
 
                   {showInterestFields && (
                     <>
@@ -949,7 +995,6 @@ const AccountOpeningForm: React.FC<Props> = ({
                     </>
                   )}
 
-                  {/* Introducer & Agent Section - Now visible but Read-Only for Members */}
                   <Grid item xs={12} md={6}>
                     <TextField
                       label="Introducer Code"

@@ -17,14 +17,14 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import LockIcon from '@mui/icons-material/Lock';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+// import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import SavingsIcon from '@mui/icons-material/Savings';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import GroupsIcon from '@mui/icons-material/Groups';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+// import SavingsIcon from '@mui/icons-material/Savings';
+// import CreditCardIcon from '@mui/icons-material/CreditCard';
+// import GroupsIcon from '@mui/icons-material/Groups';
+// import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
+// import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 
 import TokenService from '../../../api/token/tokenService';
@@ -122,16 +122,16 @@ const UserDashboard = () => {
     { label: "KYC", icon: <VerifiedUserIcon />, route: "/user/account/kyc", color: "#10b981" },
     { label: "Password", icon: <LockIcon />, route: "/user/account/change-password", color: "#f59e0b" },
     ...(isPackageActive ? [{ label: "Add Deposit", icon: <InventoryIcon />, route: "/user/addon-packages?view=addon", color: "#3b82f6" }] : []),
-    { label: "SB Account", icon: <AccountBalanceWalletIcon />, color: "#3b82f6", type: "sb" },
-    { label: "RD Account", icon: <AutorenewIcon />, color: "#10b981", type: "rd" },
-    { label: "FD Account", icon: <NoteAddIcon />, color: "#f59e0b", type: "fd" },
-    { label: "CA Account", icon: <AccountBalanceIcon />, color: "#6366f1", type: "ca" },
-    { label: "Pigmy Account", icon: <SavingsIcon />, color: "#10b981", type: "pigmy" },
-    { label: "BMS CREDIT", icon: <CreditCardIcon />, color: "#6366f1" },
-    { label: "GOLD LOAN", icon: <MonetizationOnIcon />, color: "#10b981" },
-    { label: "Group LOAN", icon: <GroupsIcon />, color: "#3b82f6" },
-    { label: "RD LOAN", icon: <CurrencyRupeeIcon />, color: "#ef4444" },
-    { label: "OD LOAN", icon: <CurrencyRupeeIcon />, color: "#6366f1" },
+    // { label: "SB Account", icon: <AccountBalanceWalletIcon />, color: "#3b82f6", type: "sb" },
+    { label: "Deposit", icon: <AutorenewIcon />, color: "#10b981", type: "rd" },
+    // { label: "FD Account", icon: <NoteAddIcon />, color: "#f59e0b", type: "fd" },
+    // { label: "CA Account", icon: <AccountBalanceIcon />, color: "#6366f1", type: "ca" },
+    // { label: "Pigmy Account", icon: <SavingsIcon />, color: "#10b981", type: "pigmy" },
+    // { label: "BMS CREDIT", icon: <CreditCardIcon />, color: "#6366f1" },
+    // { label: "GOLD LOAN", icon: <MonetizationOnIcon />, color: "#10b981" },
+    // { label: "Group LOAN", icon: <GroupsIcon />, color: "#3b82f6" },
+    // { label: "RD LOAN", icon: <CurrencyRupeeIcon />, color: "#ef4444" },
+    // { label: "OD LOAN", icon: <CurrencyRupeeIcon />, color: "#6366f1" },
     /* 
     { label: "BMS PROTECT", icon: <HealthAndSafetyIcon />, color: "#10b981" },
     { label: "E Shopy Product", icon: <ShoppingCartIcon />, color: "#f59e0b" },
@@ -250,7 +250,8 @@ const UserDashboard = () => {
 
       {/* Row 2: Buttons + CB icon — all same height */}
       <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'stretch' }}>
-        {/* FD BOND — Visible if user is active */}
+        {/* FD BOND — Hidden as per request */}
+        {/*
         {isUserActive && (
           <Button
             variant="contained"
@@ -274,6 +275,7 @@ const UserDashboard = () => {
             FD BOND
           </Button>
         )}
+        */}
 
         {/* OVER DRAFT — Toggle for upgraded users, Redirect for others — Hidden if ROI Inactive */}
         {/* Commented out OVER DRAFT button as per request
@@ -312,7 +314,7 @@ const UserDashboard = () => {
   );
 
   const handleAccountClick = (item: any) => {
-    if (['SB Account', 'RD Account', 'FD Account', 'CA Account', 'Pigmy Account'].includes(item.label)) {
+    if (['SB Account', 'RD Account', 'Deposit', 'FD Account', 'CA Account', 'Pigmy Account'].includes(item.label)) {
       navigate(`/user/account-opening/${item.type}`);
     }
   };
@@ -348,7 +350,8 @@ const UserDashboard = () => {
           width: '100%',
           display: { xs: showQuickAccess ? 'none' : 'block', md: 'block' }
         }}>
-          {/* CB Banner - Desktop only (mobile version is inside the header) */}
+          {/* CB Banner - Hidden as per request */}
+          {/*
           <Box
             onClick={() => navigate('/user/chat')}
             sx={{
@@ -367,8 +370,7 @@ const UserDashboard = () => {
           >
             <img src="/cb.png" alt="BMS Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </Box>
-
-
+          */}
 
           {/* Quick Services Grid */}
           <Box sx={{ mb: 6 }}>
@@ -376,6 +378,7 @@ const UserDashboard = () => {
               <Typography variant="h6" sx={{ fontWeight: 900, color: '#0a2558', letterSpacing: '0.5px' }}>
                 QUICK SERVICES
               </Typography>
+              {/* Chat icon hidden as per request
               <Box
                 onClick={() => navigate('/user/chat')}
                 sx={{
@@ -396,6 +399,7 @@ const UserDashboard = () => {
               >
                 <img src="/cb.png" alt="BMS Chat" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.4)' }} />
               </Box>
+              */}
             </Box>
             <Box sx={{
               display: 'grid',

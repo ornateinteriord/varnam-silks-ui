@@ -18,12 +18,12 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useNavigate } from 'react-router-dom';
 
 const navItems = [
-  'About Us', 
-  'Contact Us', 
-  'Terms and Conditions', 
-  'Privacy Policy', 
-  'Shipping and Return Policy', 
-  'Refund Policy'
+  { label: 'About Us', path: '/about' },
+  { label: 'Contact Us', path: '/contact' },
+  { label: 'Terms and Conditions', path: '/terms' },
+  { label: 'Privacy Policy', path: '/privacy-policy' },
+  { label: 'Shipping and Return Policy', path: '/shipping-policy' },
+  { label: 'Refund Policy', path: '/refund-policy' }
 ];
 
 const EcommerceNavbar = () => {
@@ -36,8 +36,9 @@ const EcommerceNavbar = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleRedirect = () => {
-    // Stay on home page
+  const handleRedirect = (path: string) => {
+    navigate(path);
+    setMobileOpen(false);
   };
 
   const drawer = (
@@ -47,11 +48,11 @@ const EcommerceNavbar = () => {
       </Typography>
       <List>
         {navItems.map((item) => (
-          <ListItem key={item} disablePadding>
+          <ListItem key={item.label} disablePadding>
             <ListItemText 
-              primary={item} 
+              primary={item.label} 
               sx={{ textAlign: 'center', cursor: 'pointer' }} 
-              onClick={handleRedirect}
+              onClick={() => handleRedirect(item.path)}
             />
           </ListItem>
         ))}
@@ -91,8 +92,8 @@ const EcommerceNavbar = () => {
               <Box sx={{ display: 'flex', gap: { md: 1, lg: 2 } }}>
                 {navItems.map((item) => (
                   <Button 
-                    key={item} 
-                    onClick={handleRedirect}
+                    key={item.label} 
+                    onClick={() => handleRedirect(item.path)}
                     sx={{ 
                       color: '#333', 
                       fontWeight: 600, 
@@ -104,7 +105,7 @@ const EcommerceNavbar = () => {
                       '&:hover': { color: '#800080' } 
                     }}
                   >
-                    {item}
+                    {item.label}
                   </Button>
                 ))}
               </Box>

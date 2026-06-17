@@ -118,7 +118,7 @@ const UserAccountOpening = () => {
   const accountGroup = myAccountsData?.data?.accountTypes?.find((acc: any) => {
     const name = (acc.account_group_name || '').toUpperCase();
     const type = accountType.toUpperCase();
-    return name === type || name.replace(' ACCOUNT', '') === type || name.includes(type) || acc.account_type === type;
+    return name === type || name.replace(' ACCOUNT', '') === type || name.includes(type) || acc.account_type === type || getFriendlyType(acc.account_type) === type;
   });
   const existingAccount = accountGroup?.accounts?.[0];
 
@@ -475,7 +475,6 @@ const UserAccountOpening = () => {
                   </Grid>
                 </Grid>
 
-                {/* Transactions Section */}
                 <Box sx={{ mt: 6 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -512,7 +511,7 @@ const UserAccountOpening = () => {
             ) : (
               <AccountOpeningForm
                 defaultAccountType={accountType}
-                title={`${accountType} Account Opening`}
+                title={accountType === 'RD' ? 'Deposit' : `${accountType} Account Opening`}
                 prefillMemberId={memberId || undefined}
                 readOnlyMemberId={true}
                 isUser={true}
