@@ -110,6 +110,8 @@ const AgentProfile = lazy(() => import("./pages/Agent/Profile"));
 const AgentCollections = lazy(() => import("./pages/Agent/Collections"));
 const AgentAddNew = lazy(() => import("./pages/Agent/AddNew"));
 const AgentReport = lazy(() => import("./pages/Agent/Report"));
+const AgentMyTeam = lazy(() => import("./pages/User-Pages/Team/Team"));
+const AgentWalletPage = lazy(() => import("./pages/Agent/AgentWallet"));
 
 // Admin Banking
 const BankingAgents = lazy(() => import("./pages/Administration/Agents"));
@@ -483,6 +485,8 @@ const RoutesProvider = ({
               <Route path="/agent/collections" element={<AgentCollections />} />
               <Route path="/agent/add-new" element={<AgentAddNew />} />
               <Route path="/agent/report" element={<AgentReport />} />
+              <Route path="/agent/my-team" element={<AgentMyTeam />} />
+              <Route path="/agent/wallet" element={<AgentWalletPage />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={["ADMIN", "USER"]} />}>

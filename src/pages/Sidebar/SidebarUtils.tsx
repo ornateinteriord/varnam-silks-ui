@@ -459,12 +459,18 @@ export const AgentSideBarMenuItems: SideBarMenuItemType[] = [
     path: "/agent/profile",
     isExpandable: false,
   },
-  {
-    name: "Collections",
-    icon: <MuiIcons.ListAlt />,
-    path: "/agent/collections",
+  /* {
+    name: "My Team",
+    icon: <MuiIcons.Group />,
+    path: "/agent/my-team",
     isExpandable: false,
   },
+  {
+    name: "Wallet",
+    icon: <MuiIcons.AccountBalance />,
+    path: "/agent/wallet",
+    isExpandable: false,
+  }, */
   {
     name: "Add New",
     icon: <MuiIcons.AddCircle />,

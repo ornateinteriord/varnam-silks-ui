@@ -92,14 +92,14 @@ const Navbar = ({ shouldHide, onToggleSidebar }: NavbarProps) => {
               onClick={() => navigate("/")}
               sx={{
                 fontWeight: 950,
-                fontSize: { xs: '1.4rem', md: '1.85rem' },
+                fontSize: { xs: '1rem', md: '1.2rem' },
                 cursor: "pointer",
-                letterSpacing: '1.5px',
+                letterSpacing: '1px',
                 color: 'white',
                 textShadow: '0 2px 4px rgba(0,0,0,0.2)'
               }}
             >
-              DEMO
+              VERNAM SILKS
             </Typography>
           </Box>
 

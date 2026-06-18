@@ -88,10 +88,10 @@ const Register = () => {
 
   // Update sponsor name when sponsor data is fetched
   useEffect(() => {
-    if (sponsorData && sponsorData.name) {
+    if (sponsorData?.data?.name) {
       setFormData(prev => ({
         ...prev,
-        Sponsor_name: sponsorData.name
+        Sponsor_name: sponsorData.data.name
       }));
     } else if (isError) {
       // Clear sponsor name if there's an error
@@ -174,6 +174,14 @@ const Register = () => {
     try {
       // Create the final data object with the required structure
       const finalData = {
+        name: formData.Name,
+        contactno: formData.mobileno,
+        introducer: formData.Sponsor_code,
+        introducer_name: formData.Sponsor_name,
+        password: formData.password,
+        emailid: formData.email,
+        gender: formData.gender,
+        pincode: formData.pincode,
         sponsor_id: formData.Sponsor_code,
         Sponsor_code: formData.Sponsor_code,
         Sponsor_name: formData.Sponsor_name,
@@ -187,7 +195,7 @@ const Register = () => {
         onSuccess: (response) => {
           if (response.success) {
             setRegistrationData({
-              memberId: response.user.Member_id,
+              memberId: response.data?.member_id,
               password: formData.password,
               email: formData.email
             });
