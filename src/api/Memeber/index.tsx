@@ -187,25 +187,25 @@ export const useRevertLoanRepayment = () => {
   });
 };
 
-// Load Cashfree SDK dynamically
-const loadCashfreeSDK = (): Promise<void> => {
+// Load Razorpay SDK dynamically
+const loadRazorpaySDK = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (window.Cashfree) {
-      console.log("✅ Cashfree SDK already loaded");
+    if ((window as any).Razorpay) {
+      console.log("✅ Razorpay SDK already loaded");
       resolve();
       return;
     }
 
     const script = document.createElement("script");
-    script.src = `https://sdk.cashfree.com/js/v3/cashfree.js`;
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
 
     script.onload = () => {
-      console.log("✅ Cashfree SDK loaded successfully");
+      console.log("✅ Razorpay SDK loaded successfully");
       resolve();
     };
 
     script.onerror = (error) => {
-      console.error("❌ Failed to load Cashfree SDK:", error);
+      console.error("❌ Failed to load Razorpay SDK:", error);
       reject(new Error("Failed to load payment system"));
     };
 
@@ -213,54 +213,65 @@ const loadCashfreeSDK = (): Promise<void> => {
   });
 };
 
-// Initialize Cashfree checkout with environment from backend response
-const initializeCashfreeCheckout = async (
-  paymentSessionId: string,
-  cashfreeEnv: "sandbox" | "production"
+// Initialize Razorpay checkout with data from backend response
+const initializeRazorpayCheckout = async (
+  options: {
+    key_id: string,
+    amount: number, // expecting amount in normal currency, we'll convert to paise if needed
+    currency: string,
+    name: string,
+    description: string,
+    order_id: string, // the razorpay order_id
+    receipt: string, // the internal order id
+    handler: (response: any) => void,
+    prefill?: {
+        name?: string,
+        email?: string,
+        contact?: string
+    }
+  }
 ): Promise<void> => {
   try {
-    console.log("🚀 Initializing Cashfree checkout...");
-    console.log("🔄 Using Cashfree environment from backend:", cashfreeEnv);
+    console.log("🚀 Initializing Razorpay checkout...");
 
     // Ensure SDK is loaded
-    await loadCashfreeSDK();
+    await loadRazorpaySDK();
 
-    if (!window.Cashfree) {
-      throw new Error("Cashfree SDK not available after loading");
+    if (!(window as any).Razorpay) {
+      throw new Error("Razorpay SDK not available after loading");
     }
 
-    // IMPORTANT: Use the environment from backend to ensure consistency
-    const cashfree = new window.Cashfree({
-      mode: cashfreeEnv,
+    const rzpOptions = {
+        key: options.key_id,
+        amount: options.amount * 100, // paise
+        currency: options.currency || "INR",
+        name: options.name || "Payment",
+        description: options.description,
+        order_id: options.order_id,
+        handler: options.handler,
+        prefill: options.prefill,
+        theme: {
+            color: "#3399cc"
+        }
+    };
+
+    const rzp = new (window as any).Razorpay(rzpOptions);
+    
+    rzp.on('payment.failed', function (response: any){
+        console.error("Payment Failed", response.error);
+        toast.error(response.error.description || "Payment failed");
     });
 
-    console.log("💳 Starting checkout with paymentSessionId:", paymentSessionId);
-
-    const result = await cashfree.checkout({
-      paymentSessionId,
-      redirectTarget: "_self",
-    });
-
-    console.log("💰 Payment checkout completed:", result);
+    rzp.open();
 
   } catch (error: any) {
     console.error("❌ Payment checkout error:", error);
-
-    let errorMessage = "Payment initialization failed";
-    if (error?.message?.includes("network")) {
-      errorMessage = "Network error. Please check your connection and try again.";
-    } else if (error?.message?.includes("400")) {
-      errorMessage = "Invalid payment session. Please try again.";
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
-
-    toast.error(errorMessage);
+    toast.error(error.message || "Payment initialization failed");
     throw error;
   }
 };
 
-// Create Cashfree repayment order and return redirect/payment link
+// Create Razorpay payment order and open checkout
 export const useCreatePaymentOrder = () => {
   return useMutation({
     mutationFn: async (paymentData: CreateOrderRequest): Promise<CreateOrderResponse> => {
@@ -278,27 +289,40 @@ export const useCreatePaymentOrder = () => {
         throw new Error(data.message || "Payment order creation failed");
       }
 
-      if (!data.payment_session_id) {
-        console.error("❌ Missing payment_session_id:", data);
-        throw new Error("Invalid payment order response - missing payment_session_id");
+      if (!data.razorpay_order_id) {
+        console.error("❌ Missing razorpay_order_id:", data);
+        throw new Error("Invalid payment order response - missing razorpay_order_id");
       }
 
       return data;
     },
 
-    onSuccess: async (data: CreateOrderResponse) => {
+    onSuccess: async (data: CreateOrderResponse, variables: CreateOrderRequest) => {
       console.log("✅ Payment order created successfully:", data);
 
       try {
-        // Use cashfree_env from backend to ensure environment consistency
-        const cashfreeEnv = data.cashfree_env || "sandbox";
-        console.log("🔄 Using Cashfree environment:", cashfreeEnv);
-
-        await initializeCashfreeCheckout(data.payment_session_id, cashfreeEnv);
-        toast.success("Redirecting to payment gateway...");
+        await initializeRazorpayCheckout({
+            key_id: data.key_id!,
+            amount: variables.amount,
+            currency: variables.currency || "INR",
+            name: "Vernam Silks",
+            description: "Account Deposit",
+            order_id: data.razorpay_order_id!,
+            receipt: data.order_id,
+            handler: function (_response: any) {
+                // Razorpay checkout success handler
+                // On success, we can redirect or verify payment status
+                window.location.href = `/user/account-wallet?order_id=${data.order_id}&payment_status=PAID`;
+            },
+            prefill: {
+                name: variables.customer?.customer_name,
+                email: variables.customer?.customer_email,
+                contact: variables.customer?.customer_phone
+            }
+        });
+        toast.info("Opening payment gateway...");
       } catch (error) {
         console.error("❌ Failed to initialize payment checkout:", error);
-        // Error is already handled in initializeCashfreeCheckout
       }
     },
 

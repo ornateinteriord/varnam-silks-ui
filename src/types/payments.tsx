@@ -23,8 +23,10 @@ export interface CreateOrderResponse {
   is_loan_repayment: boolean;
   member_id: string;
   member_name: string;
-  // Cashfree environment from backend (must match to avoid session ID mismatch)
-  cashfree_env: "sandbox" | "production";
+  // Razorpay fields
+  razorpay_order_id?: string;
+  key_id?: string;
+  account_no?: string;
   loan_details?: {
     current_due_amount: number;
     repayment_amount: number;

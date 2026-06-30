@@ -35,8 +35,7 @@ const AddMoneyDialog: React.FC<AddMoneyDialogProps> = ({ open, onClose, selected
     const { data: accountsData, isLoading: accountsLoading } = useGetMyAccounts();
     const { mutate: createOrder, isPending } = useCreatePaymentOrder();
 
-    // Note: Cashfree SDK is initialized dynamically in handleAddMoney 
-    // after receiving cashfree_env from backend response
+    // Note: Razorpay SDK is initialized dynamically by useCreatePaymentOrder
 
     // Flatten accounts for dropdown
     const allAccounts = accountsData?.data?.accountTypes?.flatMap((accType: any) =>
@@ -123,33 +122,8 @@ const AddMoneyDialog: React.FC<AddMoneyDialogProps> = ({ open, onClose, selected
             }
 
             createOrder(request, {
-                onSuccess: (data: any) => {
-                    if (data?.payment_session_id && (window as any).Cashfree) {
-                        // Verify the payment session ID format
-                        if (typeof data.payment_session_id !== 'string' || data.payment_session_id.trim() === '') {
-                            toast.error("Invalid payment session ID received");
-                            return;
-                        }
-
-                        // Initialize Cashfree with mode from backend response (like BICCSL-Server)
-                        const cashfreeMode = data.cashfree_env || "sandbox";
-                        console.log("Initializing Cashfree in", cashfreeMode, "mode");
-
-                        const cashfreeInstance = new (window as any).Cashfree({
-                            mode: cashfreeMode,
-                        });
-
-                        cashfreeInstance.checkout({
-                            paymentSessionId: data.payment_session_id
-                        });
-                        handleClose();
-                    } else {
-                        if (!(window as any).Cashfree) {
-                            toast.error("Payment gateway not properly initialized. Please reload the page.");
-                        } else {
-                            toast.error("Failed to initialize payment gateway");
-                        }
-                    }
+                onSuccess: (_data: any) => {
+                    handleClose();
                 },
                 onError: (error: any) => {
                     console.error("❌ Order creation failed:", error);
