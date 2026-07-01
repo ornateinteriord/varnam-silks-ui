@@ -91,6 +91,20 @@ export const useUpdateMember = () => {
     });
 };
 
+// DELETE MEMBER
+export const useDeleteMember = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (memberId: string) => {
+            return await useApi<{ success: boolean; message: string }>("DELETE", `/admin/delete-member/${memberId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["members"] });
+        },
+    });
+};
+
 // ==================== AGENT QUERIES ====================
 
 // GET ALL AGENTS
@@ -152,6 +166,20 @@ export const useUpdateAgent = () => {
             // Invalidate and refetch agents list and specific agent
             queryClient.invalidateQueries({ queryKey: ["agents"] });
             queryClient.invalidateQueries({ queryKey: ["agent", variables.agentId] });
+        },
+    });
+};
+
+// DELETE AGENT
+export const useDeleteAgent = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (agentId: string) => {
+            return await useApi<{ success: boolean; message: string }>("DELETE", `/admin/delete-agent/${agentId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["agents"] });
         },
     });
 };

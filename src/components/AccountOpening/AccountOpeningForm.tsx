@@ -1031,12 +1031,12 @@ const AccountOpeningForm: React.FC<Props> = ({
                   <Grid item xs={12} md={6}>
                     {isUser ? (
                       <TextField
-                        label="Agent Name"
+                        label="Agent Name or Code"
                         fullWidth
                         size="small"
                         value={form.agentName || form.agent || ''}
-                        InputProps={{ readOnly: true }}
-                        sx={readOnlyInputStyle}
+                        onChange={(e) => setForm({ ...form, agentName: e.target.value, agent: e.target.value })}
+                        sx={accountInputStyle}
                       />
                     ) : (
                       <FormControl fullWidth size="small" sx={accountInputStyle}>

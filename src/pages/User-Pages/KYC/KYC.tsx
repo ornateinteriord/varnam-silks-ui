@@ -24,29 +24,47 @@ import { toast } from 'react-toastify';
 const KYC: React.FC = () => {
   const { user } = useContext(UserContext);
 
-  const [formData, setFormData] = useState({
-    accountName: '',
-    account_number: '',
-    ifsc_code: '',
-    bank_name: '',
+  const [formData, setFormData] = useState(() => {
+    const savedData = sessionStorage.getItem('kycDraft');
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {}
+    }
+    return {
+      accountName: '',
+      account_number: '',
+      ifsc_code: '',
+      bank_name: '',
+    };
   });
 
   const submitKYC = useSubmitKYC();
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        accountName: user.Name,
-        account_number: user.account_number || '',
-        ifsc_code: user.ifsc_code || '',
-        bank_name: user.bank_name || '',
+      setFormData((prev: any) => {
+        // Only load from user profile if the form is empty
+        if (!prev.account_number && !prev.ifsc_code && !prev.bank_name) {
+          return {
+            accountName: user.Name || prev.accountName,
+            account_number: user.account_number || '',
+            ifsc_code: user.ifsc_code || '',
+            bank_name: user.bank_name || '',
+          };
+        }
+        return prev;
       });
     }
   }, [user]);
 
+  useEffect(() => {
+    sessionStorage.setItem('kycDraft', JSON.stringify(formData));
+  }, [formData]);
+
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
@@ -57,7 +75,7 @@ const KYC: React.FC = () => {
     }
 
     submitKYC.mutate({
-      ref_no: user.Member_id,
+      ref_no: user.Member_id || user.member_id || user.user_id || user.id,
       bankAccount: formData.account_number,
       ifsc: formData.ifsc_code,
       bankName: formData.bank_name,

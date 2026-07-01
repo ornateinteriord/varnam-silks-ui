@@ -480,6 +480,7 @@ const RoutesProvider = ({
 
             {/* agent routes */}
             <Route element={<ProtectedRoute allowedRoles={["AGENT"]} />}>
+              <Route path="/agent/update-password" element={<UpdatePassword />} />
               <Route path="/agent/dashboard" element={<AgentDashboard />} />
               <Route path="/agent/profile" element={<AgentProfile />} />
               <Route path="/agent/collections" element={<AgentCollections />} />

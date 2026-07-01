@@ -2,10 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, post, put } from "../Api";
 import { toast } from "react-toastify";
 
+import TokenService from "../token/tokenService";
+
 export const useUpdatePassword = () =>{
   return useMutation({
     mutationFn:async(passwordData:any) =>{
-    return await put("/admin/update-password",passwordData);
+      const role = TokenService.getRole();
+      const basePath = role === "AGENT" ? "/agent" : "/admin";
+      return await put(`${basePath}/update-password`,passwordData);
     },
     onSuccess:(response)=>{
       if(response.success){
@@ -15,10 +19,28 @@ export const useUpdatePassword = () =>{
       }
     },
     onError:(error:any)=>{
-      toast.error(error.response.data.message)
+      toast.error(error.response?.data?.message || "Password update failed")
     }
   })
 }
+
+export const useAdminResetPassword = () => {
+  return useMutation({
+    mutationFn: async (data: { targetId: string; newPassword: string }) => {
+      return await put("/admin/reset-account-password", data);
+    },
+    onSuccess: (response: any) => {
+      if (response.success) {
+        toast.success(response.message || "Password reset successfully");
+      } else {
+        toast.error(response.message || "Failed to reset password");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to reset account password");
+    }
+  });
+};
 
 export const useImpersonate = () => {
   return useMutation({

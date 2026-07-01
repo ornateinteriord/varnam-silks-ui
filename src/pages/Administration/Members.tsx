@@ -27,14 +27,18 @@ import AddIcon from '@mui/icons-material/Add';
 import PrintIcon from '@mui/icons-material/Print';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import CloseIcon from '@mui/icons-material/Close';
+import LockResetIcon from '@mui/icons-material/LockReset';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useReactToPrint } from 'react-to-print';
 import AdminReusableTable from '../../utils/AdminReusableTable';
 import ModifyDialog from '../../utils/MemberModifyDialog';
+import AdminResetPasswordDialog from '../../components/Dialogs/AdminResetPasswordDialog';
 import TablePDF, { PrintColumn } from '../../components/Print-components/TablePDF';
 import {
   useGetMembers,
   useCreateMember,
   useUpdateMember,
+  useDeleteMember,
   Member as MemberType
 } from '../../queries/admin/index';
 import { exportToExcel } from '../../utils/excelExport';
@@ -81,6 +85,21 @@ const Members: React.FC = () => {
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [resetPasswordDialog, setResetPasswordDialog] = useState<{
+    open: boolean;
+    targetId: string;
+    targetName: string;
+    defaultPassword?: string;
+  }>({
+    open: false,
+    targetId: '',
+    targetName: '',
+    defaultPassword: '',
+  });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; target: Member | null }>({
+    open: false,
+    target: null
+  });
   const tablePrintRef = useRef<HTMLDivElement>(null);
 
   // React Query Hooks
@@ -105,6 +124,7 @@ const Members: React.FC = () => {
 
 
   const updateMemberMutation = useUpdateMember();
+  const deleteMemberMutation = useDeleteMember();
 
   // Transform API data to table format
   const members: Member[] = membersData?.data?.map((member: MemberType) => ({
@@ -412,33 +432,92 @@ const Members: React.FC = () => {
       ),
     },
     {
-      id: 'action',
-      label: 'Action',
+      id: 'reset_pwd',
+      label: 'Password',
       minWidth: 120,
       align: 'center' as const,
       renderCell: (row: Member) => (
         <Button
           variant="outlined"
           size="small"
-          startIcon={<BlockIcon />}
+          startIcon={<LockResetIcon />}
           onClick={(e) => {
             e.stopPropagation();
-            handleActionClick(row);
+            setResetPasswordDialog({
+              open: true,
+              targetId: row.id || row.contact,
+              targetName: row.name,
+              defaultPassword: row.contact,
+            });
           }}
           sx={{
             textTransform: 'none',
             borderRadius: 1,
-            borderColor: row.status === 'Active' ? '#ef4444' : '#10b981',
-            color: row.status === 'Active' ? '#ef4444' : '#10b981',
+            borderColor: '#6567df',
+            color: '#6567df',
             fontSize: '0.75rem',
-            px: 2,
+            px: 1.5,
             '&:hover': {
-              backgroundColor: row.status === 'Active' ? '#fef2f2' : '#d1fae5',
+              borderColor: '#7e22ce',
+              backgroundColor: 'rgba(101, 103, 223, 0.05)',
             }
           }}
         >
-          {row.status === 'Active' ? 'Inactive' : 'Active'}
+          Reset
         </Button>
+      ),
+    },
+    {
+      id: 'action',
+      label: 'Action',
+      minWidth: 150,
+      align: 'center' as const,
+      renderCell: (row: Member) => (
+        <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<BlockIcon />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleActionClick(row);
+            }}
+            sx={{
+              textTransform: 'none',
+              borderRadius: 1,
+              borderColor: row.status === 'Active' ? '#ef4444' : '#10b981',
+              color: row.status === 'Active' ? '#ef4444' : '#10b981',
+              fontSize: '0.75rem',
+              px: 1.5,
+              '&:hover': {
+                backgroundColor: row.status === 'Active' ? '#fef2f2' : '#d1fae5',
+              }
+            }}
+          >
+            {row.status === 'Active' ? 'Inactive' : 'Active'}
+          </Button>
+          {row.status !== 'Active' && (
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteDialog({ open: true, target: row });
+              }}
+              sx={{
+                color: '#ef4444',
+                border: '1px solid #ef4444',
+                borderRadius: 1,
+                padding: '3px',
+                '&:hover': {
+                  backgroundColor: '#fef2f2',
+                }
+              }}
+              title="Delete Member"
+            >
+              <DeleteOutlineIcon sx={{ fontSize: '1.1rem' }} />
+            </IconButton>
+          )}
+        </Stack>
       ),
     },
   ];
@@ -466,11 +545,6 @@ const Members: React.FC = () => {
     setPage(1);
   };
 
-  const handleClearSearch = () => {
-    setSearchInput('');
-    setSearchQuery('');
-    setPage(1);
-  };
 
   const handleRowsPerPageChange = (newRowsPerPage: number) => {
     setRowsPerPage(newRowsPerPage);
@@ -670,6 +744,28 @@ const Members: React.FC = () => {
     }
   };
 
+  const handleDeleteConfirm = () => {
+    if (!deleteDialog.target?.id) return;
+    deleteMemberMutation.mutate(deleteDialog.target.id, {
+      onSuccess: (res: any) => {
+        setSnackbar({
+          open: true,
+          message: res?.message || 'Member account deleted successfully',
+          severity: 'success'
+        });
+        setDeleteDialog({ open: false, target: null });
+      },
+      onError: (err: any) => {
+        setSnackbar({
+          open: true,
+          message: err?.message || 'Failed to delete member',
+          severity: 'error'
+        });
+        setDeleteDialog({ open: false, target: null });
+      }
+    });
+  };
+
   const tableActions = (
     <Stack direction="row" spacing={1}>
       <Button
@@ -737,7 +833,6 @@ const Members: React.FC = () => {
         isLoading={isLoading}
         onSearchChange={handleSearchChange}
         onSearch={handleSearch}
-        onClearSearch={handleClearSearch}
         searchQuery={searchInput}
         paginationPerPage={rowsPerPage}
         actions={tableActions}
@@ -859,6 +954,54 @@ const Members: React.FC = () => {
             }}
           >
             Print
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <AdminResetPasswordDialog
+        open={resetPasswordDialog.open}
+        onClose={() => setResetPasswordDialog(prev => ({ ...prev, open: false }))}
+        targetId={resetPasswordDialog.targetId}
+        targetName={resetPasswordDialog.targetName}
+        defaultPassword={resetPasswordDialog.defaultPassword}
+        roleType="Member"
+      />
+
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, target: null })}
+        PaperProps={{
+          sx: { borderRadius: '16px', maxWidth: '400px', width: '100%' }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: '#ef4444' }}>
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#4b5563', mt: 1 }}>
+            Are you sure you want to delete member <strong>{deleteDialog.target?.name}</strong> ({deleteDialog.target?.member_id})? This action cannot be undone and will permanently remove all associated account logins.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteDialog({ open: false, target: null })}
+            variant="outlined"
+            sx={{ borderRadius: '8px', textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            disabled={deleteMemberMutation.isPending}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              backgroundColor: '#ef4444',
+              '&:hover': { backgroundColor: '#dc2626' }
+            }}
+          >
+            {deleteMemberMutation.isPending ? <CircularProgress size={20} color="inherit" /> : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

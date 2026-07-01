@@ -878,7 +878,7 @@ export const useSubmitKYC = () => {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      return await post("/kyc/submit", data);
+      return await post("/transaction/kyc/submit", data);
     },
     onSuccess: () => {
       toast.success("KYC submitted successfully!");

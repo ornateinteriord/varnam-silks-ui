@@ -196,7 +196,9 @@ const Navbar = ({ shouldHide, onToggleSidebar }: NavbarProps) => {
 
           <MenuItem
             onClick={() => {
-              navigate("/admin/update-password");
+              const role = TokenService.getRole() || userRole;
+              const basePath = role === "AGENT" ? "/agent" : "/admin";
+              navigate(`${basePath}/update-password`);
               setAnchorEl(null);
             }}
           >
