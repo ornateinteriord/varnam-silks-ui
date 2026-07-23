@@ -1099,7 +1099,7 @@ const AccountOpeningForm: React.FC<Props> = ({
                         variant="contained"
                         size="large"
                         onClick={handleSubmit}
-                        disabled={true || !memberInfo || createAccountMutation.isPending} // Disabled for now as requested
+                        disabled={!memberInfo || createAccountMutation.isPending}
                         sx={{
                           background: theme.gradient,
                           px: 4,
