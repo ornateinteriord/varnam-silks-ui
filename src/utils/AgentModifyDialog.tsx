@@ -21,7 +21,10 @@ import {
     FormControlLabel,
     Radio,
     FormLabel,
+    InputAdornment,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -44,6 +47,7 @@ interface AgentFormData {
     address: string;
     date_of_joining: string;
     entered_by: string;
+    password?: string;
 }
 
 interface AgentModifyDialogProps {
@@ -85,11 +89,13 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
         address: '',
         date_of_joining: '',
         entered_by: '',
+        password: '',
     });
 
     // Validation state for contact number
     const [, setContactError] = useState<string>('');
     const [dobError, setDobError] = useState<string>('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // Update form data when agent data is fetched
     useEffect(() => {
@@ -111,6 +117,7 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                 address: agent.address || '',
                 date_of_joining: agent.date_of_joining ? new Date(agent.date_of_joining).toISOString().split('T')[0] : '',
                 entered_by: agent.entered_by || '',
+                password: agent.password || '',
             });
         } else if (!isEditMode || isError || !open) {
             // Reset form for create mode or when there's an error
@@ -130,6 +137,7 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                 address: '',
                 date_of_joining: '',
                 entered_by: '',
+                password: '',
             });
         }
     }, [agentData, isEditMode, open, isError]);
@@ -389,6 +397,34 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                                 value={formData.entered_by}
                                 onChange={handleChange}
                                 size="small"
+                            />
+                        </Grid>
+
+                        {/* Password */}
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label={isEditMode ? "Reset Password" : "Password"}
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.password || ''}
+                                onChange={handleChange}
+                                size="small"
+                                placeholder={isEditMode ? "Enter new password to reset" : "Enter password"}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                edge="end"
+                                                size="small"
+                                            >
+                                                {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
                             />
                         </Grid>
 

@@ -1,13 +1,21 @@
 // types/payment.ts
 export interface CreateOrderRequest {
   amount: number;
-  currency: string;
-  customer: {
+  currency?: string;
+  customer?: {
     customer_id: string;
     customer_email?: string;
     customer_phone?: string;
     customer_name?: string;
   };
+  member_id?: string | number;
+  mobileno?: string | number;
+  Name?: string;
+  email?: string;
+  account_id?: string | number;
+  account_no?: string | number;
+  account_type?: string;
+  account_group_name?: string;
   notes?: {
     isLoanRepayment?: boolean;
     [key: string]: any;

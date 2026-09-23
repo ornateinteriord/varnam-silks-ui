@@ -197,7 +197,10 @@ const Navbar = ({ shouldHide, onToggleSidebar }: NavbarProps) => {
           <MenuItem
             onClick={() => {
               const role = TokenService.getRole() || userRole;
-              const basePath = role === "AGENT" ? "/agent" : "/admin";
+              let basePath = "/admin";
+              if (role === "AGENT") basePath = "/agent";
+              else if (role === "ADMIN_01") basePath = "/admin_01";
+              
               navigate(`${basePath}/update-password`);
               setAnchorEl(null);
             }}

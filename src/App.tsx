@@ -435,6 +435,7 @@ const RoutesProvider = ({
             <Route element={<ProtectedRoute allowedRoles={["ADMIN_01"]} />}>
               <Route path="/admin_01/dashboard" element={<Admin01Dashboard />} />
               <Route path="/admin_01/members" element={<Admin01Members />} />
+              <Route path="/admin_01/update-password" element={<UpdatePassword />} />
               <Route path="/banking/interestrate" element={<Admin01Interests />} />
               {/* Admin Banking Routes */}
               <Route path="/banking/agents" element={<BankingAgents />} />

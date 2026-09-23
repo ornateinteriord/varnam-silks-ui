@@ -862,35 +862,91 @@ const AccountOpeningForm: React.FC<Props> = ({
                   </Grid>
 
                   {isRD && (
-                    <Grid item xs={12} md={6}>
-                      <FormControl fullWidth size="small" sx={accountInputStyle}>
-                        <InputLabel id="deposit-slab-label">Deposit Slab</InputLabel>
-                        <Select
-                          labelId="deposit-slab-label"
-                          label="Deposit Slab"
-                          value={form.interestSlab}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            let maturity = '';
-                            if (val === '1000') maturity = '14000';
-                            if (val === '2000') maturity = '28000';
-                            if (val === '3000') maturity = '42000';
-                            
-                            setForm((prev: any) => ({
-                              ...prev,
-                              interestSlab: val,
-                              amount: val,
-                              maturityValue: maturity
-                            }));
-                          }}
-                        >
-                          <MenuItem value="">Select Deposit Slab</MenuItem>
-                          <MenuItem value="1000">1000(1yr)</MenuItem>
-                          <MenuItem value="2000">2000(1yr)</MenuItem>
-                          <MenuItem value="3000">3000(1yr)</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
+                    <>
+                      <Grid item xs={12} md={6}>
+                        <FormControl fullWidth size="small" sx={accountInputStyle}>
+                          <InputLabel id="deposit-amount-label">Select Deposit Amount</InputLabel>
+                          <Select
+                            labelId="deposit-amount-label"
+                            label="Select Deposit Amount"
+                            value={form.amount}
+                            onChange={(e) => {
+                              const amt = e.target.value;
+                              const dur = form.duration || '';
+                              let maturity = '';
+
+                              if (amt === '1000') {
+                                if (dur === '12') maturity = '14000';
+                                if (dur === '18') maturity = '21000';
+                                if (dur === '24') maturity = '28000';
+                              } else if (amt === '2000') {
+                                if (dur === '12') maturity = '28000';
+                                if (dur === '18') maturity = '42000';
+                                if (dur === '24') maturity = '56000';
+                              } else if (amt === '3000') {
+                                if (dur === '12') maturity = '42000';
+                                if (dur === '18') maturity = '63000';
+                                if (dur === '24') maturity = '84000';
+                              }
+                              
+                              setForm((prev: any) => ({
+                                ...prev,
+                                amount: amt,
+                                interestSlab: dur ? `${amt}-${dur}` : '',
+                                maturityValue: maturity
+                              }));
+                            }}
+                          >
+                            <MenuItem value="1000">₹1,000</MenuItem>
+                            <MenuItem value="2000">₹2,000</MenuItem>
+                            <MenuItem value="3000">₹3,000</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      {form.amount && (
+                        <Grid item xs={12} md={6}>
+                          <FormControl fullWidth size="small" sx={accountInputStyle}>
+                            <InputLabel id="deposit-duration-label">Select Plan Duration</InputLabel>
+                            <Select
+                              labelId="deposit-duration-label"
+                              label="Select Plan Duration"
+                              value={form.duration}
+                              onChange={(e) => {
+                                const dur = e.target.value;
+                                const amt = form.amount;
+                                let maturity = '';
+
+                                if (amt === '1000') {
+                                  if (dur === '12') maturity = '14000';
+                                  if (dur === '18') maturity = '21000';
+                                  if (dur === '24') maturity = '28000';
+                                } else if (amt === '2000') {
+                                  if (dur === '12') maturity = '28000';
+                                  if (dur === '18') maturity = '42000';
+                                  if (dur === '24') maturity = '56000';
+                                } else if (amt === '3000') {
+                                  if (dur === '12') maturity = '42000';
+                                  if (dur === '18') maturity = '63000';
+                                  if (dur === '24') maturity = '84000';
+                                }
+                                
+                                setForm((prev: any) => ({
+                                  ...prev,
+                                  duration: dur,
+                                  interestSlab: `${amt}-${dur}`,
+                                  maturityValue: maturity
+                                }));
+                              }}
+                            >
+                              <MenuItem value="12">12 Months (Maturity: ₹{form.amount === '1000' ? '14,000' : form.amount === '2000' ? '28,000' : '42,000'})</MenuItem>
+                              <MenuItem value="18">18 Months (Maturity: ₹{form.amount === '1000' ? '21,000' : form.amount === '2000' ? '42,000' : '63,000'})</MenuItem>
+                              <MenuItem value="24">24 Months (Maturity: ₹{form.amount === '1000' ? '28,000' : form.amount === '2000' ? '56,000' : '84,000'})</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                      )}
+                    </>
                   )}
 
                   {showInterestFields && (

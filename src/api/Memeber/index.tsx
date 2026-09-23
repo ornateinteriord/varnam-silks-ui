@@ -17,7 +17,7 @@ export const useVerifyPayment = () => {
     mutationFn: async (orderId: string): Promise<VerifyPaymentResponse> => {
       console.log("🔄 Verifying payment status for order:", orderId);
 
-      const response = await get(`/payments/verify-payment/${orderId}`);
+      const response = await get(`/transaction/status/${orderId}`);
 
       if (!response) throw new Error("No response from server");
 
@@ -71,7 +71,7 @@ export const useCheckPaymentStatus = (orderId: string | null, enabled: boolean =
     queryFn: async () => {
       if (!orderId) throw new Error("No order ID provided");
 
-      const response = await get(`/payments/status/${orderId}`);
+      const response = await get(`/transaction/status/${orderId}`);
       const data = response?.data || response;
 
       // If payment is completed, invalidate queries
@@ -277,7 +277,7 @@ export const useCreatePaymentOrder = () => {
     mutationFn: async (paymentData: CreateOrderRequest): Promise<CreateOrderResponse> => {
       console.log("🔄 Creating payment order...", paymentData);
 
-      const response = await post(`/payments/create-order`, paymentData);
+      const response = await post(`/transaction/create-order`, paymentData);
 
       if (!response) throw new Error("No response from server");
 
@@ -309,10 +309,18 @@ export const useCreatePaymentOrder = () => {
             description: "Account Deposit",
             order_id: data.razorpay_order_id!,
             receipt: data.order_id,
-            handler: function (_response: any) {
+            handler: async function (_response: any) {
                 // Razorpay checkout success handler
-                // On success, we can redirect or verify payment status
-                window.location.href = `/user/account-wallet?order_id=${data.order_id}&payment_status=PAID`;
+                toast.info("Verifying payment...");
+                try {
+                    await get(`/transaction/status/${data.order_id}`);
+                    toast.success("Payment successful!");
+                    setTimeout(() => window.location.reload(), 1500);
+                } catch (error) {
+                    console.error("Verification failed:", error);
+                    toast.error("Payment verification failed. It will be updated shortly.");
+                    setTimeout(() => window.location.reload(), 2000);
+                }
             },
             prefill: {
                 name: variables.customer?.customer_name,
