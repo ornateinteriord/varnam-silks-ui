@@ -88,9 +88,9 @@ const UserAccountOpening = () => {
   const getFriendlyType = (type: string | undefined) => {
     const t = (type || '').toUpperCase();
     if (t === 'AGP001') return 'SB';
-    if (t === 'AGP002') return 'RD';
-    if (t === 'AGP003') return 'FD';
-    if (t === 'AGP004') return 'MIS';
+    if (t === 'AGP003') return 'RD';
+    if (t === 'AGP004') return 'FD';
+    if (t === 'AGP005') return 'Pigmy';
     if (t === 'AGP005') return 'PIGMY';
     if (t === 'AGP006') return 'CA';
     return t;

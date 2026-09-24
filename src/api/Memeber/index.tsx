@@ -644,8 +644,11 @@ export const useActivatePackage = () => {
         packageType: data.packageType,
         activatedAt: new Date().toISOString()
       });
-      if (response.success && (response.data?.commissions || response.commissions)) {
-        console.log("Commission data received:", response.data?.commissions || response.commissions);
+      if (response.success) {
+        console.log("✅ All Commission Data Response:", response);
+        if (response.data?.commissions || response.commissions) {
+          console.log("✅ Commission data received:", response.data?.commissions || response.commissions);
+        }
       }
       return response;
     },
@@ -787,6 +790,7 @@ export const useGetlevelbenifits = (memberId: any) => {
     queryKey: ["level-benifits", memberId],
     queryFn: async () => {
       const response = await get(`/user/level-benefits/${memberId}`);
+      console.log("✅ Level Commission / Benefits API Response:", response);
       if (response.success) {
         return response.data;
       } else {

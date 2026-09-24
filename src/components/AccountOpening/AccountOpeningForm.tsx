@@ -15,12 +15,25 @@ import {
   CircularProgress,
   Divider,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import CloseIcon from '@mui/icons-material/Close';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import SecurityIcon from '@mui/icons-material/Security';
 import { toast } from 'react-toastify';
 import * as AdminQueries from '../../queries/admin';
 import * as MemberQueries from '../../queries/Member';
+import { useCreatePaymentOrder } from '../../api/Memeber';
 
 export type AccountType = 'SB' | 'CA' | 'RD' | 'FD' | 'PIGMY' | 'MIS' | string;
 
@@ -187,6 +200,7 @@ const AccountOpeningForm: React.FC<Props> = ({
   const [introducerCode, setIntroducerCode] = useState<string>('');
   const [shouldFetchAgent, setShouldFetchAgent] = useState<boolean>(false);
   const [agentError, setAgentError] = useState<boolean>(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // Auto-fetch member info if prefilled
   useEffect(() => {
@@ -216,6 +230,7 @@ const AccountOpeningForm: React.FC<Props> = ({
     agent: '',
     agentName: '',
     jointMember: '',
+    paymentMode: 'Offline',
   });
 
   // Fetch account groups (Admin or Member)
@@ -264,8 +279,8 @@ const AccountOpeningForm: React.FC<Props> = ({
   const memberCreateAccount = MemberQueries.useCreateMemberAccount();
   const createAccountMutation = isUser ? memberCreateAccount : adminCreateAccount;
 
-  // Cashfree Order Mutation
-  // const { mutate: createOrder, isPending: isOrderPending } = useCreatePaymentOrder();
+  // Cashfree / Razorpay Order Mutation
+  const { mutate: createOrder } = useCreatePaymentOrder();
 
   console.log('AccountOpeningForm Debug:', { isUser, accountGroupId, defaultAccountType });
   console.log('Account Groups Data:', accountGroupsData);
@@ -443,67 +458,28 @@ const AccountOpeningForm: React.FC<Props> = ({
     }
   };
 
-  const handleSubmit = async () => {
-    if (!memberInfo) {
-      toast.error('Please fetch member information first');
+  const handleSubmit = async (mode?: 'Online' | 'Offline') => {
+    if (!mode) {
+      if (!memberInfo) {
+        toast.error('Please fetch member information first');
+        return;
+      }
+
+      if (!form.amount || parseFloat(form.amount) <= 0) {
+        toast.error('Please enter a valid amount');
+        return;
+      }
+
+      if (form.accountOperation === 'Any two' && !form.jointMember) {
+        toast.error('Please enter joint member details');
+        return;
+      }
+
+      setPaymentModalOpen(true);
       return;
     }
 
-    if (!form.amount || parseFloat(form.amount) <= 0) {
-      toast.error('Please enter a valid amount');
-      return;
-    }
-
-    if (form.accountOperation === 'Any two' && !form.jointMember) {
-      toast.error('Please enter joint member details');
-      return;
-    }
-
-    /*
-    // Commented out Cashfree payment logic as per request - accounts can be created directly without payment
-    if (isUser) {
-      // Members must pay via Cashfree
-      const orderData = {
-        payment_type: 'ACCOUNT_OPENING',
-        member_id: memberId,
-        amount: parseFloat(form.amount),
-        mobileno: memberInfo.contactno || memberInfo.mobileno,
-        Name: memberInfo.name || memberInfo.Name,
-        email: memberInfo.emailid || memberInfo.email || "customer@example.com",
-        account_type: accountGroupId, // This is the group ID
-        // Extra metadata for account creation in webhook
-        account_operation: form.accountOperation,
-        interest_rate: parseFloat(form.interestRate) || 0,
-        duration: parseInt(form.duration) || 0,
-        date_of_maturity: form.maturityDate || null,
-        introducer: form.introducer,
-        agent: form.agent,
-        joint_member: form.accountOperation === 'Any two' ? form.jointMember : null,
-      };
-
-      createOrder(orderData, {
-        onSuccess: (data: any) => {
-          if (data?.payment_session_id && (window as any).Cashfree) {
-            const cashfreeMode = data.cashfree_env || "sandbox";
-            const cashfreeInstance = new (window as any).Cashfree({
-              mode: cashfreeMode,
-            });
-
-            cashfreeInstance.checkout({
-              paymentSessionId: data.payment_session_id
-            });
-            toast.info("Redirecting to payment gateway...");
-          } else {
-            toast.error("Failed to initialize payment gateway. Please try again.");
-          }
-        },
-        onError: (error: any) => {
-          toast.error(error?.response?.data?.message || "Failed to initiate payment");
-        }
-      });
-      return;
-    }
-    */
+    setPaymentModalOpen(false);
 
     // Admin-side account creation (Direct)
     try {
@@ -511,7 +487,7 @@ const AccountOpeningForm: React.FC<Props> = ({
         branch_id: memberInfo.branch_id,
         date_of_opening: form.openingDate,
         member_id: memberId,
-        account_type: accountGroupId || (isRD ? 'AGP002' : form.accountType), // Send account_group_id
+        account_type: accountGroupId || (isRD ? 'AGP003' : form.accountType), // Send account_group_id
         account_operation: form.accountOperation,
         introducer: form.introducer,
         entered_by: memberInfo.entered_by || '', // From logged-in user
@@ -520,15 +496,50 @@ const AccountOpeningForm: React.FC<Props> = ({
         duration: parseInt(form.duration) || 0,
         date_of_maturity: form.maturityDate || null,
         assigned_to: form.agent,
-        account_amount: parseFloat(form.amount),
+        account_amount: mode === 'Online' ? 0 : parseFloat(form.amount),
         joint_member: form.accountOperation === 'Any two' ? form.jointMember : null,
+        payment_mode: mode.toLowerCase(),
       };
 
       const result = await createAccountMutation.mutateAsync(accountData);
+      console.log('Account creation result:', result);
 
       if (result?.success) {
-        toast.success('Account created successfully!');
-        // Reset form
+        if (mode === 'Online') {
+          // If online, we initiate the payment order with the newly created account
+          const orderData = {
+            payment_type: 'ACCOUNT_OPENING',
+            member_id: memberId,
+            amount: parseFloat(form.amount),
+            mobileno: memberInfo.contactno || memberInfo.mobileno,
+            Name: memberInfo.name || memberInfo.Name,
+            email: memberInfo.emailid || memberInfo.email || "customer@example.com",
+            account_type: result.data?.account_type || result.account_type || accountGroupId || (isRD ? 'AGP003' : form.accountType),
+            account_id: result.data?.account_id || result.account_id,
+            account_no: result.data?.account_no || result.account_no,
+            description: `Account Opening - ${result.data?.account_no || result.account_no}`,
+            customer: {
+              customer_id: memberId,
+              customer_email: memberInfo.emailid || memberInfo.email || "customer@example.com",
+              customer_phone: memberInfo.contactno || memberInfo.mobileno,
+              customer_name: memberInfo.name || memberInfo.Name
+            },
+            notes: {
+              account_operation: form.accountOperation,
+              interest_rate: parseFloat(form.interestRate) || 0,
+              duration: parseInt(form.duration) || 0,
+              date_of_maturity: form.maturityDate || null,
+              introducer: form.introducer,
+              agent: form.agent,
+              joint_member: form.accountOperation === 'Any two' ? form.jointMember : null,
+            }
+          };
+
+          createOrder(orderData);
+          return; // Stop here, Razorpay modal handles the rest
+        } else {
+          toast.success('Account created successfully!');
+          // Reset form
         setMemberId('');
         setMemberInfo(null);
         setForm({
@@ -545,7 +556,9 @@ const AccountOpeningForm: React.FC<Props> = ({
           introducerName: '',
           agent: '',
           jointMember: '',
+          paymentMode: 'Offline',
         });
+      }
       }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to create account');
@@ -1154,7 +1167,7 @@ const AccountOpeningForm: React.FC<Props> = ({
                       <Button
                         variant="contained"
                         size="large"
-                        onClick={handleSubmit}
+                        onClick={() => handleSubmit()}
                         disabled={!memberInfo || createAccountMutation.isPending}
                         sx={{
                           background: theme.gradient,
@@ -1181,7 +1194,144 @@ const AccountOpeningForm: React.FC<Props> = ({
           </Grid>
         </CardContent>
       </Card>
-    </Box >
+
+      {/* Payment Mode Selection Modal */}
+      <Dialog 
+        open={paymentModalOpen} 
+        onClose={() => setPaymentModalOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            padding: 1,
+            minWidth: { xs: '300px', sm: '400px' }
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+          <Typography variant="h6" fontWeight="bold">Select Payment Mode</Typography>
+          <IconButton onClick={() => setPaymentModalOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ mt: 2, pb: 1 }}>
+          <RadioGroup
+            value={form.paymentMode || 'Online'}
+            onChange={(e) => setForm({ ...form, paymentMode: e.target.value })}
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    border: '1px solid',
+                    borderColor: form.paymentMode === 'Online' ? theme.primary : '#e2e8f0',
+                    borderRadius: 2,
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    bgcolor: form.paymentMode === 'Online' ? `${theme.primary}08` : 'transparent',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: theme.primary,
+                      bgcolor: `${theme.primary}04`
+                    }
+                  }}
+                  onClick={() => setForm({ ...form, paymentMode: 'Online' })}
+                >
+                  <FormControlLabel
+                    value="Online"
+                    control={<Radio sx={{ color: theme.primary, '&.Mui-checked': { color: theme.primary } }} />}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                        <CreditCardIcon sx={{ color: form.paymentMode === 'Online' ? theme.primary : '#64748b', mr: 1.5, fontSize: 28 }} />
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="600" color="text.primary">
+                            Pay Online
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Instant activation via Razorpay
+                          </Typography>
+                        </Box>
+                      </Box>
+                    }
+                    sx={{ m: 0, width: '100%' }}
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    border: '1px solid',
+                    borderColor: form.paymentMode === 'Offline' ? theme.primary : '#e2e8f0',
+                    borderRadius: 2,
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    bgcolor: form.paymentMode === 'Offline' ? `${theme.primary}08` : 'transparent',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: theme.primary,
+                      bgcolor: `${theme.primary}04`
+                    }
+                  }}
+                  onClick={() => setForm({ ...form, paymentMode: 'Offline' })}
+                >
+                  <FormControlLabel
+                    value="Offline"
+                    control={<Radio sx={{ color: theme.primary, '&.Mui-checked': { color: theme.primary } }} />}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                        <AccountBalanceWalletIcon sx={{ color: form.paymentMode === 'Offline' ? theme.primary : '#64748b', mr: 1.5, fontSize: 28 }} />
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight="600" color="text.primary">
+                            Pay Offline
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Cash payment at the branch
+                          </Typography>
+                        </Box>
+                      </Box>
+                    }
+                    sx={{ m: 0, width: '100%' }}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
+          </RadioGroup>
+
+          <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, bgcolor: '#f0fdf4', p: 1.5, borderRadius: 2, border: '1px dashed #bbf7d0' }}>
+            <SecurityIcon sx={{ color: '#16a34a', fontSize: 20 }} />
+            <Typography variant="body2" fontWeight="500" color="#166534">
+              100% Secure & Encrypted Payments
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 0, mt: 1 }}>
+          <Button 
+            fullWidth
+            variant="contained" 
+            size="large"
+            onClick={() => {
+              handleSubmit(form.paymentMode || 'Online');
+            }}
+            disabled={createAccountMutation.isPending}
+            sx={{ 
+              py: 1.5, 
+              background: theme.gradient, 
+              fontWeight: 'bold', 
+              borderRadius: 2,
+              textTransform: 'none',
+              fontSize: '1rem',
+              boxShadow: theme.shadow,
+            }}
+          >
+            {createAccountMutation.isPending ? <CircularProgress size={24} color="inherit" /> : `Proceed securely with ${form.paymentMode || 'Online'}`}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

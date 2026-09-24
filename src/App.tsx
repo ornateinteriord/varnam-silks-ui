@@ -151,6 +151,7 @@ const MISPayMaturity = lazy(() => import("./pages/Admin-Pages/Banking/MIS/MISPay
 
 
 
+
 // user pages
 const UserDashboard = lazy(
   () => import("./pages/User-Pages/UserDashboard/Dashboard")
@@ -428,6 +429,11 @@ const RoutesProvider = ({
               <Route path="/admin/kyc-approval" element={<KYCApproval />} />
               <Route path="/admin/withdraw-pending" element={<WithdrawPending />} />
               <Route path="/admin/chat" element={<AdminChat />} />
+              <Route path="/banking/agents" element={<BankingAgents />} />
+              <Route path="/banking/rd-opening" element={<RDOpening />} />
+              <Route path="/banking/rd-viewall" element={<RDViewAll />} />
+              <Route path="/banking/rd-prematurity" element={<RDPreMaturity />} />
+              <Route path="/banking/rd-pay-maturity" element={<RDPayMaturity />} />
 
             </Route>
 

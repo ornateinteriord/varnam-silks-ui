@@ -175,7 +175,12 @@ export const AdminSideBarMenuItems: SideBarMenuItemType[] = [
       },
     ],
   },
-
+  {
+    name: "Agents",
+    icon: <PersonIcon />,
+    path: "/banking/agents",
+    isExpandable: false,
+  },
   //   name: "Package",
   //   icon: <InventoryIcon />,
   //   isExpandable: true,
@@ -207,6 +212,19 @@ export const AdminSideBarMenuItems: SideBarMenuItemType[] = [
   //     },
   //   ],
 
+  {
+    name: "Deposit",
+    icon: <LucideIcons.RefreshCcw />,
+    isExpandable: true,
+    subItems: [
+      { name: "RD Opening", path: "/banking/rd-opening", icon: <LucideIcons.PlusCircle /> },
+      { name: "ViewAll / Search", path: "/banking/rd-viewall", icon: <LucideIcons.Search /> },
+      { name: "RD Prematurity", path: "/banking/rd-prematurity", icon: <LucideIcons.Undo2 /> },
+      { name: "Pay Maturity", path: "/banking/rd-pay-maturity", icon: <PaymentsIcon /> },
+      { name: "RD Calculator", path: "/banking/rd-calculator", icon: <LucideIcons.Calculator /> },
+      { name: "Offline Paid Users", path: "/banking/offline-paid-users", icon: <GroupIcon /> },
+    ],
+  },
   {
     name: "Add-On Incomes",
     icon: <PaymentsIcon />,
@@ -406,6 +424,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "RD Prematurity", path: "/banking/rd-prematurity", icon: <LucideIcons.Undo2 /> },
       { name: "Pay Maturity", path: "/banking/rd-pay-maturity", icon: <PaymentsIcon /> },
       { name: "RD Calculator", path: "/banking/rd-calculator", icon: <LucideIcons.Calculator /> },
+      { name: "Offline Paid Users", path: "/banking/offline-paid-users", icon: <GroupIcon /> },
     ],
   },
   /* {
@@ -420,7 +439,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "FD Calculator", path: "/banking/fd-calculator", icon: <LucideIcons.Calculator /> },
     ],
   }, */
-  {
+  /* {
     name: "PIGMY",
     icon: <LucideIcons.PiggyBank />,
     isExpandable: true,
@@ -431,7 +450,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "Pay Maturity", path: "/banking/pigmy-pay-maturity", icon: <PaymentsIcon /> },
       { name: "Calculator", path: "/banking/pigmy-calculator", icon: <LucideIcons.Calculator /> },
     ],
-  },
+  }, */
   /* {
     name: "MIS",
     icon: <ShowChartIcon />,

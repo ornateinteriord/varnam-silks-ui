@@ -32,7 +32,8 @@ import PrintIcon from '@mui/icons-material/Print';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { useReactToPrint } from 'react-to-print';
-import { useGetAccounts, useGetAccountGroups, type Account } from '../../queries/admin';
+import { toast } from 'react-toastify';
+import { useGetAccounts, useGetAccountGroups, useUpdateAccount, type Account } from '../../queries/admin';
 import TransactionDialog from '../Dialogs/TransactionDialog';
 import TablePDF, { PrintColumn } from '../Print-components/TablePDF';
 
@@ -117,6 +118,8 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
     const [selectedAccountType, setSelectedAccountType] = useState('');
     const [printDialogOpen, setPrintDialogOpen] = useState(false);
     const tablePrintRef = useRef<HTMLDivElement>(null);
+    const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+    const [accountToApprove, setAccountToApprove] = useState<Account | null>(null);
 
     // Fetch account groups to map account type name to ID
     const { data: accountGroupsData } = useGetAccountGroups();
@@ -136,13 +139,28 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
     }, [accountGroupsData, accountType]);
 
     // Fetch accounts with filters
-    const { data: accountsData, isLoading, isError } = useGetAccounts(
+    const { data: accountsData, isLoading, isError, refetch } = useGetAccounts(
         page + 1,
         rowsPerPage,
         searchQuery || undefined,
         statusFilter === 'all' ? undefined : statusFilter,
         accountGroupId || undefined
     );
+
+    const updateAccountMutation = useUpdateAccount();
+
+    const handleApproveAccount = async (accountId: string) => {
+        try {
+            await updateAccountMutation.mutateAsync({
+                accountId,
+                data: { status: 'active' }
+            });
+            toast.success('Account approved successfully!');
+            refetch();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || 'Failed to approve account');
+        }
+    };
 
     // Fetch all accounts for printing (without pagination)
     const { data: allAccountsData } = useGetAccounts(
@@ -394,7 +412,7 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
                                             'Duration',
                                             'Maturity Date',
                                             'Status',
-                                            'Transactions',
+                                            'Actions',
                                         ].map((head) => (
                                             <TableCell
                                                 key={head}
@@ -406,7 +424,7 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
                                                     whiteSpace: 'nowrap',
                                                     py: 1.5,
                                                     ...(head === 'Amount' && { textAlign: 'right' }),
-                                                    ...(head === 'Transactions' && { textAlign: 'center' }),
+                                                    ...(head === 'Actions' && { textAlign: 'center' }),
                                                 }}
                                             >
                                                 {head}
@@ -465,28 +483,48 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
                                                 />
                                             </TableCell>
                                             <TableCell align="center">
-                                                <Button
-                                                    variant="outlined"
-                                                    size="small"
-                                                    onClick={() => {
-                                                        setSelectedMemberId(account.member_id || '');
-                                                        setSelectedAccountType(accountGroupId);
-                                                        setTransactionDialogOpen(true);
-                                                    }}
-                                                    sx={{
-                                                        textTransform: 'none',
-                                                        fontWeight: 600,
-                                                        borderRadius: 2,
-                                                        borderColor: theme.primary,
-                                                        color: theme.primary,
-                                                        '&:hover': {
-                                                            borderColor: theme.secondary,
-                                                            backgroundColor: `${theme.primary}0a`,
-                                                        },
-                                                    }}
-                                                >
-                                                    View
-                                                </Button>
+                                                <Stack direction="row" spacing={1} justifyContent="center">
+                                                    {account.status?.toLowerCase() === 'pending' && (
+                                                        <Button
+                                                            variant="contained"
+                                                            color="success"
+                                                            size="small"
+                                                            onClick={() => {
+                                                                setAccountToApprove(account);
+                                                                setApproveDialogOpen(true);
+                                                            }}
+                                                            sx={{
+                                                                textTransform: 'none',
+                                                                fontWeight: 600,
+                                                                borderRadius: 2,
+                                                            }}
+                                                        >
+                                                            Approve
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        variant="outlined"
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setSelectedMemberId(account.member_id || '');
+                                                            setSelectedAccountType(accountGroupId);
+                                                            setTransactionDialogOpen(true);
+                                                        }}
+                                                        sx={{
+                                                            textTransform: 'none',
+                                                            fontWeight: 600,
+                                                            borderRadius: 2,
+                                                            borderColor: theme.primary,
+                                                            color: theme.primary,
+                                                            '&:hover': {
+                                                                borderColor: theme.secondary,
+                                                                backgroundColor: `${theme.primary}0a`,
+                                                            },
+                                                        }}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                </Stack>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -516,13 +554,101 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
                 )}
             </Paper>
 
-            {/* Transaction Dialog */}
             <TransactionDialog
                 open={transactionDialogOpen}
                 onClose={() => setTransactionDialogOpen(false)}
                 memberId={selectedMemberId}
                 accountType={selectedAccountType}
             />
+
+            {/* Approve Dialog */}
+            <Dialog 
+                open={approveDialogOpen} 
+                onClose={() => setApproveDialogOpen(false)} 
+                maxWidth="xs" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        overflow: 'hidden'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    bgcolor: 'success.main', 
+                    color: 'white', 
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    py: 2
+                }}>
+                    Approve Account
+                </DialogTitle>
+                <DialogContent sx={{ p: 4, bgcolor: '#f8fafc' }}>
+                    {accountToApprove && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                            <Typography variant="body1" sx={{ textAlign: 'center', color: 'text.secondary', mb: 1 }}>
+                                Please review the details below before approving.
+                            </Typography>
+                            
+                            <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: 'white' }}>
+                                <Stack spacing={2}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">Name:</Typography>
+                                        <Typography variant="subtitle2" fontWeight={600}>{accountToApprove.memberDetails?.name || 'N/A'}</Typography>
+                                    </Box>
+                                    <Divider sx={{ borderStyle: 'dashed' }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">Member ID:</Typography>
+                                        <Typography variant="subtitle2" fontWeight={600}>{accountToApprove.member_id || 'N/A'}</Typography>
+                                    </Box>
+                                    <Divider sx={{ borderStyle: 'dashed' }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">Plan Type:</Typography>
+                                        <Chip label={accountType} size="small" sx={{ fontWeight: 600, ...theme.chip }} />
+                                    </Box>
+                                    <Divider sx={{ borderStyle: 'dashed' }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">Duration:</Typography>
+                                        <Typography variant="subtitle2" fontWeight={600}>{accountToApprove.duration || 0} Months</Typography>
+                                    </Box>
+                                    <Divider sx={{ borderStyle: 'dashed' }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">Amount:</Typography>
+                                        <Typography variant="subtitle1" fontWeight={700} color="success.main">
+                                            ₹{(accountToApprove.account_amount || 0).toLocaleString('en-IN')}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Paper>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 2.5, bgcolor: '#f8fafc', justifyContent: 'center', gap: 2 }}>
+                    <Button 
+                        onClick={() => setApproveDialogOpen(false)} 
+                        variant="outlined" 
+                        color="inherit"
+                        sx={{ borderRadius: 2, px: 4, textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={() => {
+                            if (accountToApprove && accountToApprove.account_id) {
+                                handleApproveAccount(accountToApprove.account_id);
+                                setApproveDialogOpen(false);
+                            }
+                        }} 
+                        variant="contained" 
+                        color="success"
+                        disableElevation
+                        sx={{ borderRadius: 2, px: 4, textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Confirm Approval
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Print Preview Dialog */}
             <Dialog
