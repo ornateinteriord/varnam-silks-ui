@@ -497,6 +497,7 @@ const AccountOpeningForm: React.FC<Props> = ({
         date_of_maturity: form.maturityDate || null,
         assigned_to: form.agent,
         account_amount: mode === 'Online' ? 0 : parseFloat(form.amount),
+        plan_amount: parseFloat(form.amount),
         joint_member: form.accountOperation === 'Any two' ? form.jointMember : null,
         payment_mode: mode.toLowerCase(),
       };

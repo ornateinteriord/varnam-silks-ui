@@ -138,6 +138,12 @@ const UserAccountOpening = () => {
     };
   }, [accountType]);
 
+  // Fetch transactions for statement if account exists
+  const { data: txData, isLoading: loadingTx } = useGetTransactionDetails('all', 'all');
+  const transactions = txData?.data || [];
+
+
+
   const nextDueDate = useMemo(() => {
     if (!existingAccount?.date_of_opening) return null;
     try {
@@ -149,8 +155,40 @@ const UserAccountOpening = () => {
         return 'Matured';
       }
       
-      while (nextDue <= now) {
-        nextDue.setMonth(nextDue.getMonth() + 1);
+      // Use plan_amount directly if available (from the VS_plan feature)
+      let installment = Number(existingAccount.plan_amount || 0);
+
+      // Fallback for older accounts that don't have plan_amount
+      if (installment === 0) {
+        const allTx = transactions.filter((t: any) => t.account_no === existingAccount.account_no) || [];
+        const openingTx = allTx.find((t: any) => t.transaction_type === "Account Opening");
+        
+        if (openingTx) {
+          installment = Number(openingTx.credit || openingTx.ew_credit || 0);
+        } else if (allTx.length > 0) {
+          const sorted = [...allTx].sort((a: any, b: any) => new Date(a.transaction_date || a.createdAt).getTime() - new Date(b.transaction_date || b.createdAt).getTime());
+          const firstCreditTx = sorted.find((t: any) => (t.credit || t.ew_credit) > 0);
+          if (firstCreditTx) {
+            installment = Number(firstCreditTx.credit || firstCreditTx.ew_credit);
+          }
+        }
+      }
+
+      if (installment === 0) {
+        installment = Number(existingAccount.account_amount || 0);
+      }
+
+      if (installment > 0) {
+        const totalPaid = Number(existingAccount.account_amount || 0);
+        const periodsPaid = Math.floor(totalPaid / installment);
+        
+        // Push due date forward by the number of periods paid
+        nextDue.setMonth(nextDue.getMonth() + periodsPaid);
+        
+      } else {
+        while (nextDue <= now) {
+          nextDue.setMonth(nextDue.getMonth() + 1);
+        }
       }
       
       if (existingAccount.date_of_maturity && nextDue > new Date(existingAccount.date_of_maturity)) {
@@ -161,7 +199,7 @@ const UserAccountOpening = () => {
     } catch (e) {
       return null;
     }
-  }, [existingAccount]);
+  }, [existingAccount, transactions]);
 
   // All accounts for self-transfer destination
   const allMyAccounts = useMemo(() => {
@@ -181,9 +219,7 @@ const UserAccountOpening = () => {
 
   const transferMoneyMutation = useTransferMoney();
 
-  // Fetch transactions for statement if account exists
-  const { data: txData, isLoading: loadingTx } = useGetTransactionDetails('all', accountGroup?.account_type || accountType);
-  const transactions = txData?.data || [];
+  
 
   const filteredTransactions = useMemo(() => {
     if (!searchQuery) return transactions;
@@ -396,16 +432,20 @@ const UserAccountOpening = () => {
                       {(accountType === 'RD' || accountType === 'PIGMY') && nextDueDate && (
                         <Box sx={{
                           mt: 1,
-                          p: 1,
+                          p: 1.5,
+                          px: 2,
                           bgcolor: 'rgba(255,255,255,0.15)',
                           borderRadius: '10px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
+                          justifyContent: 'space-between',
                           border: '1px dashed rgba(255,255,255,0.4)'
                         }}>
                           <Typography sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.5px' }}>
-                            Next Due: {nextDueDate}
+                            Due Date: {nextDueDate}
+                          </Typography>
+                          <Typography sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                            Due Amount: ₹{Number(existingAccount.plan_amount || 0).toLocaleString('en-IN')}
                           </Typography>
                         </Box>
                       )}
