@@ -430,6 +430,9 @@ const RoutesProvider = ({
               <Route path="/admin/withdraw-pending" element={<WithdrawPending />} />
               <Route path="/admin/chat" element={<AdminChat />} />
               <Route path="/banking/agents" element={<BankingAgents />} />
+              <Route path="/admin/banking/receipts" element={<AdminReceipts />} />
+              <Route path="/admin/banking/payments" element={<AdminPayments />} />
+              <Route path="/admin/banking/cash-transaction" element={<AdminCashTransaction />} />
               <Route path="/banking/rd-opening" element={<RDOpening />} />
               <Route path="/banking/rd-viewall" element={<RDViewAll />} />
               <Route path="/banking/rd-prematurity" element={<RDPreMaturity />} />

@@ -103,6 +103,7 @@ const UserAccountOpening = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [paymentProcessed, setPaymentProcessed] = useState(false);
 
+
   useEffect(() => {
     const orderId = searchParams.get('order_id');
     const orderStatus = searchParams.get('order_status');
@@ -136,6 +137,31 @@ const UserAccountOpening = () => {
       document.body.classList.remove(className);
     };
   }, [accountType]);
+
+  const nextDueDate = useMemo(() => {
+    if (!existingAccount?.date_of_opening) return null;
+    try {
+      const openDate = new Date(existingAccount.date_of_opening);
+      const now = new Date();
+      let nextDue = new Date(openDate);
+      
+      if (existingAccount.date_of_maturity && now > new Date(existingAccount.date_of_maturity)) {
+        return 'Matured';
+      }
+      
+      while (nextDue <= now) {
+        nextDue.setMonth(nextDue.getMonth() + 1);
+      }
+      
+      if (existingAccount.date_of_maturity && nextDue > new Date(existingAccount.date_of_maturity)) {
+        return 'Matured';
+      }
+      
+      return nextDue.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch (e) {
+      return null;
+    }
+  }, [existingAccount]);
 
   // All accounts for self-transfer destination
   const allMyAccounts = useMemo(() => {
@@ -278,14 +304,10 @@ const UserAccountOpening = () => {
           </Typography>
         </Box>
 
-        {/* Main Form Card */}
-        <Paper elevation={0} sx={{
-          p: { xs: 1.5, sm: 3, md: 4 },
-          borderRadius: '24px',
-          border: `1px solid ${theme.primary}15`,
-          boxShadow: '0 10px 40px rgba(0,0,0,0.03)',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(10px)',
+        {/* Main Content Area */}
+        <Box sx={{
+          p: { xs: 0, sm: 1, md: 2 },
+          width: '100%',
         }}>
           <Box sx={{ mt: 2 }}>
             {loadingMyAccounts ? (
@@ -296,15 +318,15 @@ const UserAccountOpening = () => {
               <Box>
                 {/* Account Overview Header */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
-                  <Grid item xs={12} md={8}>
+                  <Grid item xs={12} md={6}>
                     <Paper elevation={0} sx={{
-                      p: 3,
-                      borderRadius: '24px',
+                      p: 2,
+                      borderRadius: '16px',
                       background: theme.gradient,
                       color: 'white',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 2,
+                      gap: 1.5,
                       position: 'relative',
                       overflow: 'hidden',
                       boxShadow: theme.shadow
@@ -312,10 +334,10 @@ const UserAccountOpening = () => {
                       {/* Decorative Circle */}
                       <Box sx={{
                         position: 'absolute',
-                        top: -40,
-                        right: -40,
-                        width: 150,
-                        height: 150,
+                        top: -30,
+                        right: -30,
+                        width: 100,
+                        height: 100,
                         borderRadius: '50%',
                         background: 'rgba(255,255,255,0.1)'
                       }} />
@@ -370,10 +392,27 @@ const UserAccountOpening = () => {
                           {existingAccount.status || 'Active'}
                         </Box>
                       </Box>
+
+                      {(accountType === 'RD' || accountType === 'PIGMY') && nextDueDate && (
+                        <Box sx={{
+                          mt: 1,
+                          p: 1,
+                          bgcolor: 'rgba(255,255,255,0.15)',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px dashed rgba(255,255,255,0.4)'
+                        }}>
+                          <Typography sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                            Next Due: {nextDueDate}
+                          </Typography>
+                        </Box>
+                      )}
                     </Paper>
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={6}>
                     <Paper elevation={0} sx={{
                       p: 3,
                       borderRadius: '24px',
@@ -518,7 +557,7 @@ const UserAccountOpening = () => {
               />
             )}
           </Box>
-        </Paper>
+        </Box>
       </Container>
 
       {/* Self Transfer Dialog */}

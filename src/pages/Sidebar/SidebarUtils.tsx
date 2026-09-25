@@ -181,6 +181,15 @@ export const AdminSideBarMenuItems: SideBarMenuItemType[] = [
     path: "/banking/agents",
     isExpandable: false,
   },
+  {
+    name: "Banking",
+    icon: <MuiIcons.AccountBalance />,
+    isExpandable: true,
+    subItems: [
+      { name: "Receipts", path: "/admin/banking/receipts", icon: <ReceiptLongIcon /> },
+      { name: "Payments", path: "/admin/banking/payments", icon: <PaymentsIcon /> },
+    ],
+  },
   //   name: "Package",
   //   icon: <InventoryIcon />,
   //   isExpandable: true,
@@ -214,7 +223,7 @@ export const AdminSideBarMenuItems: SideBarMenuItemType[] = [
 
   {
     name: "Deposit",
-    icon: <LucideIcons.RefreshCcw />,
+    icon: <MuiIcons.Savings />,
     isExpandable: true,
     subItems: [
       { name: "RD Opening", path: "/banking/rd-opening", icon: <LucideIcons.PlusCircle /> },
@@ -386,12 +395,11 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
   },
   {
     name: "Banking",
-    icon: <LucideIcons.Landmark />,
+    icon: <MuiIcons.AccountBalance />,
     isExpandable: true,
     subItems: [
       { name: "Receipts", path: "/admin/banking/receipts", icon: <ReceiptLongIcon /> },
       { name: "Payments", path: "/admin/banking/payments", icon: <PaymentsIcon /> },
-      { name: "Cash Transaction", path: "/admin/banking/cash-transaction", icon: <LucideIcons.IndianRupee /> },
     ],
   },
   /* {
@@ -416,7 +424,7 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
   }, */
   {
     name: "Deposit",
-    icon: <LucideIcons.RefreshCcw />,
+    icon: <MuiIcons.Savings />,
     isExpandable: true,
     subItems: [
       { name: "RD Opening", path: "/banking/rd-opening", icon: <LucideIcons.PlusCircle /> },

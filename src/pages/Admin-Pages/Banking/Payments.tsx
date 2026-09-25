@@ -373,7 +373,7 @@ const Payments: React.FC = () => {
   );
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3, md: 4 }, mt: { xs: 7, sm: 8 }, px: { xs: 1, sm: 2, md: 3 } }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3, md: 4 }, mt: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
       <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e', mb: 1, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
           List of Payments
