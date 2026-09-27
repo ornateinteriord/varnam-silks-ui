@@ -168,23 +168,27 @@ const Collections: React.FC = () => {
       label: 'Action',
       align: 'center',
       renderCell: (row) => (
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            textTransform: 'none',
-            background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-            },
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleOpenDialog(row);
-          }}
-        >
-          Collect
-        </Button>
+        row.account_type === 'Member Profile' ? (
+          <Chip label="Profile Only" size="small" variant="outlined" />
+        ) : (
+          <Button
+            variant="contained"
+            size="small"
+            sx={{
+              textTransform: 'none',
+              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+              },
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenDialog(row);
+            }}
+          >
+            Collect
+          </Button>
+        )
       ),
     },
   ];

@@ -305,7 +305,7 @@ export const useCreatePaymentOrder = () => {
             key_id: data.key_id!,
             amount: variables.amount,
             currency: variables.currency || "INR",
-            name: "Vernam Silks",
+            name: "Varnam Silks",
             description: "Account Deposit",
             order_id: data.razorpay_order_id!,
             receipt: data.order_id,

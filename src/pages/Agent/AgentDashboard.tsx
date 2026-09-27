@@ -331,15 +331,17 @@ const AgentDashboard = () => {
         </Grid>
       </Box>
 
-      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mx: { xs: 1, sm: 2 }, my: 2, pt: 3 }}>
-        {/* Recent Collections */}
-        <Grid item xs={12} sm={12} md={8}>
-          <Card sx={{
-            borderRadius: '16px',
-            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
-            border: '1px solid rgba(102, 126, 234, 0.1)',
-            background: 'white',
-          }}>
+      <Box sx={{ px: { xs: 1.5, sm: 2, md: 1 }, mb: 3, mt: 2 }}>
+        <Grid container spacing={3}>
+          {/* Recent Collections */}
+          <Grid item xs={12} sm={12} md={8}>
+            <Card sx={{
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
+              border: '1px solid rgba(102, 126, 234, 0.1)',
+              background: 'white',
+              height: '100%',
+            }}>
             <CardContent>
               <Typography variant="h6" style={{
                 fontWeight: 'bold',
@@ -559,6 +561,7 @@ const AgentDashboard = () => {
           </Card>
         </Grid>
       </Grid>
+      </Box>
 
     </div >
   );

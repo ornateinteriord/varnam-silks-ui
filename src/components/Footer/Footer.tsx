@@ -38,7 +38,7 @@ const Footer = () => {
                                 lineHeight: 1
                             }}
                         >
-                            VERNAM SILKS
+                            VARNAM SILKS
                         </Typography>
                         {/* <Box sx={{ p: 2, borderRadius: "12px", bgcolor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", display: "inline-block", mb: 2 }}>
                             <Typography variant="caption" sx={{ opacity: 0.8, fontWeight: 700, letterSpacing: "1px", color: "#60a5fa" }}>
@@ -83,7 +83,7 @@ const Footer = () => {
                                     </Box>
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                                         <Box sx={{ p: 1, borderRadius: "8px", bgcolor: "rgba(96, 165, 250, 0.1)" }}><Mail size={18} color="#60a5fa" /></Box>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>contact@vernamsilks.com</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>contact@varnamsilks.com</Typography>
                                     </Box>
                                 </Box>
                             </Grid>
@@ -132,7 +132,7 @@ const Footer = () => {
                     }}
                 >
                     <Typography variant="caption" sx={{ opacity: 0.4, fontWeight: 600 }}>
-                        © {currentYear} VERNAM SILKS. Designed for excellence.
+                        © {currentYear} VARNAM SILKS. Designed for excellence.
                     </Typography>
 
                     <Box sx={{ display: "flex", gap: { xs: 2, sm: 5 }, flexWrap: "wrap", justifyContent: "center" }}>
