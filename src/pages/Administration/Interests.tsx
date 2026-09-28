@@ -27,6 +27,7 @@ const MANUAL_INTERESTS = [
   { interest_id: "FD003", interest_name: "3 YEAR", plan_type: "FD", duration: 36, interest_rate_general: 10, interest_rate_senior: 10.5, minimum_deposit: 1000, status: "active", interest_type: "FD", ref_id: "AGP001" },
   { interest_id: "FD004", interest_name: "4 YEAR", plan_type: "FD", duration: 48, interest_rate_general: 11, interest_rate_senior: 11.5, minimum_deposit: 1000, status: "active", interest_type: "FD", ref_id: "AGP001" },
   { interest_id: "FD005", interest_name: "5 YEAR", plan_type: "FD", duration: 60, interest_rate_general: 13, interest_rate_senior: 13, minimum_deposit: 1000, status: "active", interest_type: "FD", ref_id: "AGP001" },
+  { interest_id: "FD006", interest_name: "10 YEAR", plan_type: "FD", duration: 120, interest_rate_general: 14, interest_rate_senior: 14.5, minimum_deposit: 100, status: "active", interest_type: "FD", ref_id: "AGP001" },
   { interest_id: "RD001", interest_name: "1 YEAR", plan_type: "RD", duration: 12, interest_rate_general: 6, interest_rate_senior: 6.5, minimum_deposit: 500, status: "active", interest_type: "RD", ref_id: "AGP003" },
   { interest_id: "RD002", interest_name: "2 YEAR", plan_type: "RD", duration: 24, interest_rate_general: 7, interest_rate_senior: 7.5, minimum_deposit: 500, status: "active", interest_type: "RD", ref_id: "AGP003" },
   { interest_id: "RD003", interest_name: "3 YEAR", plan_type: "RD", duration: 36, interest_rate_general: 9, interest_rate_senior: 9.5, minimum_deposit: 500, status: "active", interest_type: "RD", ref_id: "AGP003" },

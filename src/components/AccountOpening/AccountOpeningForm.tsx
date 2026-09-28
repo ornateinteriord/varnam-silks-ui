@@ -886,31 +886,24 @@ const AccountOpeningForm: React.FC<Props> = ({
                             value={form.amount}
                             onChange={(e) => {
                               const amt = e.target.value;
-                              const dur = form.duration || '';
+                              let dur = '';
                               let maturity = '';
 
-                              if (amt === '1000') {
-                                if (dur === '12') maturity = '14000';
-                                if (dur === '18') maturity = '21000';
-                                if (dur === '24') maturity = '28000';
-                              } else if (amt === '2000') {
-                                if (dur === '12') maturity = '28000';
-                                if (dur === '18') maturity = '42000';
-                                if (dur === '24') maturity = '56000';
-                              } else if (amt === '3000') {
-                                if (dur === '12') maturity = '42000';
-                                if (dur === '18') maturity = '63000';
-                                if (dur === '24') maturity = '84000';
+                              if (amt === '100') {
+                                dur = '120';
+                                maturity = '15000';
                               }
                               
                               setForm((prev: any) => ({
                                 ...prev,
                                 amount: amt,
+                                duration: dur,
                                 interestSlab: dur ? `${amt}-${dur}` : '',
                                 maturityValue: maturity
                               }));
                             }}
                           >
+                            <MenuItem value="100">₹100</MenuItem>
                             <MenuItem value="1000">₹1,000</MenuItem>
                             <MenuItem value="2000">₹2,000</MenuItem>
                             <MenuItem value="3000">₹3,000</MenuItem>
@@ -943,6 +936,8 @@ const AccountOpeningForm: React.FC<Props> = ({
                                   if (dur === '12') maturity = '42000';
                                   if (dur === '18') maturity = '63000';
                                   if (dur === '24') maturity = '84000';
+                                } else if (amt === '100') {
+                                  if (dur === '120') maturity = '15000';
                                 }
                                 
                                 setForm((prev: any) => ({
@@ -953,9 +948,18 @@ const AccountOpeningForm: React.FC<Props> = ({
                                 }));
                               }}
                             >
-                              <MenuItem value="12">12 Months (Maturity: ₹{form.amount === '1000' ? '14,000' : form.amount === '2000' ? '28,000' : '42,000'})</MenuItem>
-                              <MenuItem value="18">18 Months (Maturity: ₹{form.amount === '1000' ? '21,000' : form.amount === '2000' ? '42,000' : '63,000'})</MenuItem>
-                              <MenuItem value="24">24 Months (Maturity: ₹{form.amount === '1000' ? '28,000' : form.amount === '2000' ? '56,000' : '84,000'})</MenuItem>
+                              {form.amount === '100' && (
+                                <MenuItem value="120">120 Months (10 Years) (Maturity: ₹15,000)</MenuItem>
+                              )}
+                              {form.amount !== '100' && (
+                                <MenuItem value="12">12 Months (Maturity: ₹{form.amount === '1000' ? '14,000' : form.amount === '2000' ? '28,000' : form.amount === '3000' ? '42,000' : ''})</MenuItem>
+                              )}
+                              {form.amount !== '100' && (
+                                <MenuItem value="18">18 Months (Maturity: ₹{form.amount === '1000' ? '21,000' : form.amount === '2000' ? '42,000' : form.amount === '3000' ? '63,000' : ''})</MenuItem>
+                              )}
+                              {form.amount !== '100' && (
+                                <MenuItem value="24">24 Months (Maturity: ₹{form.amount === '1000' ? '28,000' : form.amount === '2000' ? '56,000' : form.amount === '3000' ? '84,000' : ''})</MenuItem>
+                              )}
                             </Select>
                           </FormControl>
                         </Grid>

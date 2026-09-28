@@ -640,15 +640,15 @@ export const useActivatePackage = () => {
 
   return useMutation({
     mutationFn: async (data: { memberId: string; packageType: string }) => {
-      const response = await put(`/user/activate-package/${data.memberId}`, {
+      // Replaced the non-existent /user/activate-package with /admin/update-member
+      const response = await put(`/admin/update-member/${data.memberId}`, {
+        status: 'active',
         packageType: data.packageType,
+        spackage: data.packageType, // Some forms use spackage
         activatedAt: new Date().toISOString()
       });
       if (response.success) {
-        console.log("✅ All Commission Data Response:", response);
-        if (response.data?.commissions || response.commissions) {
-          console.log("✅ Commission data received:", response.data?.commissions || response.commissions);
-        }
+        console.log("✅ Member updated successfully:", response);
       }
       return response;
     },

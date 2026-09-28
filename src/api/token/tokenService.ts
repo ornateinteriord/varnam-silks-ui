@@ -21,7 +21,7 @@ class TokenService {
     return sessionStorage.getItem("token") || localStorage.getItem("token");
   }
 
-  static decodeToken(): { id: string; role: string; memberId: string } | null {
+  static decodeToken(): { id: string; role: string; memberId: string; phone?: string } | null {
     const token = this.getToken();
     if (!token) return null;
 
@@ -62,6 +62,10 @@ class TokenService {
 
   static getUserId(): string | null {
     return this.decodeToken()?.id || null;
+  }
+
+  static getPhone(): string | null {
+    return this.decodeToken()?.phone || null;
   }
 
   static removeToken(): void {

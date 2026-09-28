@@ -4,7 +4,7 @@ import {
   TextField, Typography, Button, Grid, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions,
   Box, Divider,
-  Radio, RadioGroup, FormControlLabel, FormControl, FormLabel,
+  FormControl, Select, MenuItem, InputLabel,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { CheckCircle, WarningAmber } from '@mui/icons-material';
@@ -312,8 +312,19 @@ export const PendingMembers = () => {
 
   const handleActivateClick = (member: any) => {
     setSelectedMember(member);
-    // Don't pre-fill package amount to ensure "Select Package" is shown
-    setPackageAmount('');
+    // Determine the existing package amount to pre-fill
+    let initialPackage = '';
+    const amt = member?.amount || member?.plan_amount || member?.package_value || member?.spackage;
+    const dur = member?.duration;
+    
+    if (amt && dur) {
+      initialPackage = `${amt}_${dur}`;
+    } else if (amt && !dur) {
+      // If we only have amount, try to guess duration or let user choose
+      initialPackage = `${amt}_12`;
+    }
+    
+    setPackageAmount(initialPackage);
     setActivationType('with');
     setDialogOpen(true);
   };
@@ -321,9 +332,11 @@ export const PendingMembers = () => {
   const handleConfirm = () => {
     if (!selectedMember) return;
 
+    const mId = selectedMember.member_id || selectedMember.Member_id;
+
     if (activationType === 'without') {
       activatePackage(
-        { memberId: selectedMember.Member_id, packageType: 'NONE' },
+        { memberId: mId, packageType: 'NONE' },
         {
           onSuccess: () => {
             setDialogOpen(false);
@@ -339,16 +352,15 @@ export const PendingMembers = () => {
       return;
     }
 
-    const amt = Number(packageAmount);
-    if (!amt || amt <= 0) {
-      toast.error('Please enter a valid package amount or select None.');
+    if (!packageAmount) {
+      toast.error('Please select a valid package amount.');
       return;
     }
 
-    const packageType = `BMS_${amt}`;
+    const packageType = packageAmount;
 
     activatePackage(
-      { memberId: selectedMember.Member_id, packageType },
+      { memberId: mId, packageType },
       {
         onSuccess: () => {
           // if (response.success) {
@@ -400,15 +412,15 @@ export const PendingMembers = () => {
             <Grid container spacing={1.5}>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">Member ID</Typography>
-                <Typography variant="body2" fontWeight={600}>{selectedMember?.Member_id}</Typography>
+                <Typography variant="body2" fontWeight={600}>{selectedMember?.Member_id || selectedMember?.member_id}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">Name</Typography>
-                <Typography variant="body2" fontWeight={600}>{selectedMember?.Name}</Typography>
+                <Typography variant="body2" fontWeight={600}>{selectedMember?.Name || selectedMember?.name}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">Mobile</Typography>
-                <Typography variant="body2" fontWeight={600}>{selectedMember?.mobileno}</Typography>
+                <Typography variant="body2" fontWeight={600}>{selectedMember?.mobileno || selectedMember?.contactno}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">Package Amount</Typography>
@@ -417,24 +429,28 @@ export const PendingMembers = () => {
                     ? `₹${selectedMember.package_value}`
                     : selectedMember?.spackage
                       ? `₹${selectedMember.spackage}`
-                      : '-'}
+                      : selectedMember?.plan_amount
+                        ? `₹${selectedMember.plan_amount}`
+                        : selectedMember?.amount
+                          ? `₹${selectedMember.amount}${selectedMember.duration ? ` - ${selectedMember.duration} Months` : ''}`
+                          : '-'}
                 </Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">Sponsor</Typography>
-                <Typography variant="body2" fontWeight={600}>{selectedMember?.Sponsor_name ?? '-'}</Typography>
+                <Typography variant="body2" fontWeight={600}>{selectedMember?.Sponsor_name || selectedMember?.introducer_name || '-'}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">Current Status</Typography>
                 <Typography variant="body2" fontWeight={600} sx={{ color: '#FFC000' }}>
-                  {selectedMember?.status}
+                  {selectedMember?.status || selectedMember?.STATUS}
                 </Typography>
               </Grid>
             </Grid>
           </Box>
 
           {/* Activation Type Selection */}
-          <FormControl component="fieldset" sx={{ mb: 3 }}>
+          {/* <FormControl component="fieldset" sx={{ mb: 3 }}>
             <FormLabel component="legend" sx={{ fontWeight: 600, color: primaryColor, mb: 1 }}>Activation Type</FormLabel>
             <RadioGroup
               row
@@ -452,27 +468,36 @@ export const PendingMembers = () => {
                 label={<Typography variant="body2" fontWeight={600}>Without Package</Typography>}
               />
             </RadioGroup>
-          </FormControl>
+          </FormControl> */}
 
-          {/* Manual Package Amount Entry */}
+          {/* Select Package Amount Entry */}
           {activationType === 'with' && (
-            <TextField
-              label="Package Amount"
-              fullWidth
-              type="number"
-              value={packageAmount}
-              onChange={(e) => setPackageAmount(e.target.value)}
-              placeholder="e.g. 1000"
-              helperText="Enter the package amount to activate this member"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: primaryColor },
-                  '&:hover fieldset': { borderColor: primaryColor },
-                  '&.Mui-focused fieldset': { borderColor: primaryColor },
-                },
-                '& .MuiInputLabel-root.Mui-focused': { color: primaryColor }
-              }}
-            />
+            <FormControl fullWidth>
+              <InputLabel id="package-amount-select-label" sx={{ '&.Mui-focused': { color: primaryColor } }}>Package Amount</InputLabel>
+              <Select
+                labelId="package-amount-select-label"
+                value={packageAmount}
+                label="Package Amount"
+                onChange={(e) => setPackageAmount(e.target.value as string)}
+                sx={{
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: primaryColor },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: primaryColor }
+                }}
+              >
+                <MenuItem value="1000_12">1000 - 12 Months (Maturity: ₹14,000)</MenuItem>
+                <MenuItem value="1000_18">1000 - 18 Months (Maturity: ₹21,000)</MenuItem>
+                <MenuItem value="1000_24">1000 - 24 Months (Maturity: ₹28,000)</MenuItem>
+                <MenuItem value="2000_12">2000 - 12 Months (Maturity: ₹28,000)</MenuItem>
+                <MenuItem value="2000_18">2000 - 18 Months (Maturity: ₹42,000)</MenuItem>
+                <MenuItem value="2000_24">2000 - 24 Months (Maturity: ₹56,000)</MenuItem>
+                <MenuItem value="3000_12">3000 - 12 Months (Maturity: ₹42,000)</MenuItem>
+                <MenuItem value="3000_18">3000 - 18 Months (Maturity: ₹63,000)</MenuItem>
+                <MenuItem value="3000_24">3000 - 24 Months (Maturity: ₹84,000)</MenuItem>
+              </Select>
+              <Typography variant="caption" sx={{ mt: 1, ml: 1.5, color: 'text.secondary' }}>
+                Select the package amount to activate this member
+              </Typography>
+            </FormControl>
           )}
 
         </DialogContent>

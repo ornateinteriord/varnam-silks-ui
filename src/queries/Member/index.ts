@@ -146,3 +146,17 @@ export const useGetSponsers = (memberId: string | null, enabled: boolean = true)
         enabled: enabled && !!memberId,
     });
 };
+
+export const useUpdateMemberAccount = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ accountId, data }: { accountId: string; data: any }) => {
+            return await useApi<any>("PUT", `/member/update-account/${accountId}`, data);
+        },
+        onSuccess: () => {
+            // Invalidate and refetch accounts list
+            queryClient.invalidateQueries({ queryKey: ["myAccounts"] });
+        },
+    });
+};

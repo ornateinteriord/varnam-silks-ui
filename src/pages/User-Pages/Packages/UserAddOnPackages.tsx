@@ -91,7 +91,7 @@ export const UserAddOnPackages = () => {
               <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                 <Autocomplete
                   freeSolo
-                  options={["1000", "2000", "5000", "10000", "25000", "50000", "100000", "250000", "500000", "1000000", "2500000"]}
+                  options={["100", "1000", "2000", "5000", "10000", "25000", "50000", "100000", "250000", "500000", "1000000", "2500000"]}
                   value={packageAmount}
                   onChange={(_, newValue) => setPackageAmount(newValue || '')}
                   onInputChange={(_, newInputValue) => setPackageAmount(newInputValue)}

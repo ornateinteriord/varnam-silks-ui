@@ -16,6 +16,8 @@ export interface CreateOrderRequest {
   account_no?: string | number;
   account_type?: string;
   account_group_name?: string;
+  payment_type?: string;
+  description?: string;
   notes?: {
     isLoanRepayment?: boolean;
     [key: string]: any;

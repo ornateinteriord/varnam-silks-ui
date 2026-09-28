@@ -22,7 +22,9 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import AddMoneyDialog from '../../../components/Wallet/AddMoneyDialog';
+import { useCreatePaymentOrder } from '../../../api/Memeber';
 
 const ACCOUNT_THEMES: Record<string, any> = {
   SB: {
@@ -80,6 +82,12 @@ const UserAccountOpening = () => {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
   const [targetAccountNo, setTargetAccountNo] = useState('');
+
+  // Edit Plan State
+  const [editPlanDialogOpen, setEditPlanDialogOpen] = useState(false);
+  const [editPlanAmount, setEditPlanAmount] = useState('');
+  const [editPlanDuration, setEditPlanDuration] = useState('');
+  const [editPaymentMode, setEditPaymentMode] = useState('offline');
 
   // Map route param to account type
   const { type: rawType } = useParams();
@@ -218,8 +226,106 @@ const UserAccountOpening = () => {
   }, [myAccountsData]);
 
   const transferMoneyMutation = useTransferMoney();
+  const updateAccountMutation = MemberQueries.useUpdateMemberAccount();
+  const { mutate: createPaymentOrder, isPending: isCreatingOrder } = useCreatePaymentOrder();
 
-  
+  const handleOpenEditDialog = () => {
+    if (!existingAccount) return;
+    setEditPlanAmount(existingAccount.plan_amount || '');
+    setEditPlanDuration(existingAccount.duration || '');
+    setEditPaymentMode(existingAccount.payment_mode || 'offline');
+    setEditPlanDialogOpen(true);
+  };
+
+  const handleEditPlanSubmit = async () => {
+    if (!existingAccount) return;
+
+    try {
+      // First update the account details in the backend
+      const res = await updateAccountMutation.mutateAsync({
+        accountId: existingAccount.account_id,
+        data: {
+          plan_amount: Number(editPlanAmount),
+          duration: Number(editPlanDuration),
+          payment_mode: editPaymentMode
+        }
+      });
+
+      if (!res.success) {
+        toast.error(res.message || "Failed to update account");
+        return;
+      }
+
+      if (!editPlanAmount) {
+        toast.error("Please select a plan amount.");
+        return;
+      }
+
+      if (editPaymentMode === 'online') {
+        // Generate Razorpay payment order for the new plan amount
+        createPaymentOrder({
+          payment_type: "ACCOUNT_ACTIVATION",
+          member_id: existingAccount.member_id || memberId,
+          amount: Number(editPlanAmount),
+          mobileno: TokenService.getPhone() || "9999999999",
+          Name: "Member",
+          email: "customer@example.com",
+          account_id: existingAccount.account_id || existingAccount._id,
+          account_no: existingAccount.account_no,
+          account_type: existingAccount.account_type,
+          description: `Activate ${existingAccount.account_type} Account`,
+          notes: {
+            member_id: memberId,
+            account_no: existingAccount.account_no,
+            account_type: existingAccount.account_type,
+            payment_type: "ACCOUNT_ACTIVATION",
+            description: `Activate ${existingAccount.account_type} Account`
+          }
+        }, {
+          onSuccess: (orderData: any) => {
+            if (orderData.payment_session_id) {
+              // Cashfree
+              const cashfree = window.Cashfree({ mode: "sandbox" });
+              cashfree.checkout({
+                paymentSessionId: orderData.payment_session_id,
+                returnUrl: `${window.location.origin}/user/account-opening/${rawType}?order_id={order_id}&order_status={order_status}`
+              });
+            } else if (orderData.id) {
+              // Razorpay
+              const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "Vernam Silks Co-operative",
+                description: `Activate ${existingAccount.account_type} Account`,
+                order_id: orderData.id,
+                handler: function () {
+                  window.location.href = `/user/account-opening/${rawType}?order_id=${orderData.id}&order_status=SUCCESS`;
+                },
+                prefill: {
+                  contact: TokenService.getPhone() || "9999999999"
+                },
+                theme: {
+                  color: "#3b82f6"
+                }
+              };
+              const rzp = new (window as any).Razorpay(options);
+              rzp.open();
+            }
+          },
+          onError: () => {
+            toast.error("Failed to initiate payment");
+          }
+        });
+      } else {
+        toast.success("Plan updated successfully. Account remains pending for offline payment approval.");
+        refetchAccounts();
+        setEditPlanDialogOpen(false);
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to update account");
+    }
+  };
 
   const filteredTransactions = useMemo(() => {
     if (!searchQuery) return transactions;
@@ -467,21 +573,41 @@ const UserAccountOpening = () => {
                       <Typography variant="h6" sx={{ fontWeight: 800, color: theme.primary, mb: 1 }}>
                         Actions
                       </Typography>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setAddMoneyOpen(true)}
-                        sx={{
-                          borderRadius: '12px',
-                          py: 1.5,
-                          bgcolor: '#059669', // Emerald
-                          '&:hover': { bgcolor: '#047857' },
-                          boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
-                        }}
-                      >
-                        Add Money
-                      </Button>
+                      {existingAccount.status?.toLowerCase() === 'pending' && (
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          onClick={handleOpenEditDialog}
+                          sx={{
+                            borderRadius: '12px',
+                            py: 1.5,
+                            bgcolor: '#f59e0b', // Amber
+                            '&:hover': { bgcolor: '#d97706' },
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
+                          }}
+                        >
+                          Setup Account & Pay
+                        </Button>
+                      )}
+                      
+                      {existingAccount.status?.toLowerCase() === 'active' && (
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<AddIcon />}
+                          onClick={() => setAddMoneyOpen(true)}
+                          sx={{
+                            borderRadius: '12px',
+                            py: 1.5,
+                            bgcolor: '#059669', // Emerald
+                            '&:hover': { bgcolor: '#047857' },
+                            boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
+                          }}
+                        >
+                          Add Money
+                        </Button>
+                      )}
                       <Button
                         fullWidth
                         variant="contained"
@@ -664,6 +790,86 @@ const UserAccountOpening = () => {
             }}
           >
             {transferMoneyMutation.isPending ? <CircularProgress size={24} color="inherit" /> : 'Transfer Now'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Plan & Pay Dialog */}
+      <Dialog
+        open={editPlanDialogOpen}
+        onClose={() => setEditPlanDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '24px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: theme.primary, pb: 1 }}>
+          Setup Account Details
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
+            Update your plan details and complete the initial payment to activate your {existingAccount?.account_type} account.
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Plan Amount (₹)</InputLabel>
+              <Select
+                value={editPlanAmount}
+                label="Plan Amount (₹)"
+                onChange={(e) => setEditPlanAmount(e.target.value as string)}
+                sx={{ borderRadius: '12px' }}
+              >
+                <MenuItem value="100">₹100</MenuItem>
+                <MenuItem value="1000">₹1,000</MenuItem>
+                <MenuItem value="2000">₹2,000</MenuItem>
+                <MenuItem value="3000">₹3,000</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Duration (Months)</InputLabel>
+              <Select
+                value={editPlanDuration}
+                label="Duration (Months)"
+                onChange={(e) => setEditPlanDuration(e.target.value as string)}
+                sx={{ borderRadius: '12px' }}
+              >
+                <MenuItem value="12">12 Months (1 Year)</MenuItem>
+                <MenuItem value="18">18 Months (1.5 Years)</MenuItem>
+                <MenuItem value="24">24 Months (2 Years)</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Payment Mode</InputLabel>
+              <Select
+                value={editPaymentMode}
+                label="Payment Mode"
+                onChange={(e) => setEditPaymentMode(e.target.value as string)}
+                sx={{ borderRadius: '12px' }}
+              >
+                <MenuItem value="online">Online (Pay Now)</MenuItem>
+                <MenuItem value="offline">Offline (Cash/Agent)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setEditPlanDialogOpen(false)} sx={{ color: '#64748b' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleEditPlanSubmit}
+            disabled={updateAccountMutation.isPending || isCreatingOrder || !editPlanAmount || !editPlanDuration || !editPaymentMode}
+            sx={{
+              borderRadius: '12px',
+              bgcolor: editPaymentMode === 'online' ? '#059669' : theme.primary,
+              '&:hover': { bgcolor: editPaymentMode === 'online' ? '#047857' : theme.secondary },
+              px: 3
+            }}
+          >
+            {updateAccountMutation.isPending || isCreatingOrder ? 'Processing...' : editPaymentMode === 'online' ? 'Save & Pay Now' : 'Save Details'}
           </Button>
         </DialogActions>
       </Dialog>

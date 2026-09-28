@@ -417,13 +417,16 @@ export const getAdminDashboardTableColumns: any = () => [
   },
   {
     name: "Member",
-    selector: (row: any) => row.Name || row.Member || "-",
+    selector: (row: any) => row.Name || row.name || row.Member || row.Member_id || row.member_id || "-",
     center: true,
     sortable: true,
   },
   {
     name: "Package Amount",
-    selector: (row: any) => (row.package_value ? `₹${row.package_value}` : "-"),
+    selector: (row: any) => {
+      const amt = row.package_value ?? row.spackage ?? row.plan_amount;
+      return amt ? `₹${amt}` : "-";
+    },
     center: true,
     sortable: true,
   },
@@ -443,17 +446,17 @@ export const getMembersColumns = (
     },
     {
       name: "Member",
-      selector: (row: any) => row.Member_id,
+      selector: (row: any) => row.Member_id || row.member_id,
       sortable: true,
     },
     {
       name: "Name",
-      selector: (row: any) => row.Name ?? "-",
+      selector: (row: any) => row.Name || row.name || "-",
       sortable: true,
     },
     {
       name: "Approved On",
-      selector: (row: any) => getFormattedDate(row.Date_of_joining),
+      selector: (row: any) => getFormattedDate(row.Date_of_joining || row.date_of_joining),
       sortable: true,
     },
     {
@@ -463,17 +466,17 @@ export const getMembersColumns = (
     },
     {
       name: "Sponsor",
-      selector: (row: any) => row.Sponsor_name ?? '-',
+      selector: (row: any) => row.Sponsor_name || row.introducer_name || '-',
       sortable: true,
     },
     {
       name: "Package",
-      selector: (row: any) => row.spackage,
+      selector: (row: any) => row.spackage || row.plan_amount || row.package_value,
       sortable: true,
     },
     {
       name: "MobileNo",
-      selector: (row: any) => row.mobileno,
+      selector: (row: any) => row.mobileno || row.contactno,
       sortable: true,
     },
     {
@@ -611,36 +614,36 @@ export const getPendingMembersColumns = (
     },
     {
       name: "Member ID",
-      selector: (row: any) => row.Member_id,
+      selector: (row: any) => row.Member_id || row.member_id,
       sortable: true,
     },
     {
       name: "Name",
-      selector: (row: any) => row.Name ?? "-",
+      selector: (row: any) => row.Name || row.name || "-",
       sortable: true,
     },
     {
       name: "Package Amount",
-      selector: (row: any) => row.package_value ?? row.spackage ?? "-",
+      selector: (row: any) => row.package_value ?? row.spackage ?? row.plan_amount ?? "-",
       sortable: true,
       cell: (row: any) => {
-        const amt = row.package_value ?? row.spackage;
+        const amt = row.package_value ?? row.spackage ?? row.plan_amount;
         return amt ? `₹${amt}` : "-";
       },
     },
     {
       name: "Approved On",
-      selector: (row: any) => getFormattedDate(row.Date_of_joining),
+      selector: (row: any) => getFormattedDate(row.Date_of_joining || row.date_of_joining),
       sortable: true,
     },
     {
       name: "Sponsor",
-      selector: (row: any) => row.Sponsor_name ?? "-",
+      selector: (row: any) => row.Sponsor_name || row.introducer_name || "-",
       sortable: true,
     },
     {
       name: "MobileNo",
-      selector: (row: any) => row.mobileno,
+      selector: (row: any) => row.mobileno || row.contactno,
       sortable: true,
     },
     {

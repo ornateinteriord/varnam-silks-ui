@@ -262,9 +262,10 @@ export const GeneratePackages = () => {
   });
 
   const packages = [
-    { name: 'Package 1', value: 2000 },
-    { name: 'Package 2', value: 5000 },
-    { name: 'Package 3', value: 10000 },
+    { name: 'Package 1', value: 1000 },
+    { name: 'Package 2', value: 2000 },
+    { name: 'Package 3', value: 3000 },
+    { name: '10 Years Package', value: 100 },
   ];
 
   const handlePackageChange = (event: any) => {
