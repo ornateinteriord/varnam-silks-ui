@@ -1,21 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Button,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
   Typography
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
-import { toast } from 'react-toastify';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import AdminReusableTable, { ColumnDefinition } from '../../utils/AdminReusableTable';
-import { useGetAssignedAccounts, useCollectPayment } from '../../queries/Agent';
+import { useGetAssignedAccounts } from '../../queries/Agent';
 import TokenService from '../../queries/token/tokenService';
 import { AssignedAccount } from '../../types';
 
@@ -25,12 +17,12 @@ const Collections: React.FC = () => {
   const navigate = useNavigate();
   const typeFilter = searchParams.get('type');
 
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<AssignedAccount | null>(null);
-  const [amount, setAmount] = useState('');
+  // const [openDialog, setOpenDialog] = useState(false);
+  // const [selectedAccount, setSelectedAccount] = useState<AssignedAccount | null>(null);
+  // const [amount, setAmount] = useState('');
 
   const { data, isLoading } = useGetAssignedAccounts(agentId || '', !!agentId);
-  const collectPaymentMutation = useCollectPayment(agentId || '');
+  // const collectPaymentMutation = useCollectPayment(agentId || '');
 
   const allAccounts = data?.data || [];
 
@@ -40,38 +32,36 @@ const Collections: React.FC = () => {
     return allAccounts.filter((acc: AssignedAccount) => acc.account_type === typeFilter);
   }, [allAccounts, typeFilter]);
 
-  const handleOpenDialog = (account: AssignedAccount) => {
-    setSelectedAccount(account);
-    setOpenDialog(true);
-    setAmount('');
-  };
+  // const handleOpenDialog = (account: AssignedAccount) => {
+  //   setSelectedAccount(account);
+  //   setOpenDialog(true);
+  //   setAmount('');
+  // };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedAccount(null);
-    setAmount('');
-  };
+  // const handleCloseDialog = () => {
+  //   setOpenDialog(false);
+  //   setSelectedAccount(null);
+  //   setAmount('');
+  // };
 
-  const handleCollect = async () => {
-    if (!selectedAccount || !amount || !selectedAccount.account_id) return;
-
-    try {
-      const response = await collectPaymentMutation.mutateAsync({
-        accountId: selectedAccount.account_id,
-        amount: parseFloat(amount)
-      });
-
-      if (response.success) {
-        toast.success(`Successfully collected ₹${amount} from ${selectedAccount.account_holder}`);
-        handleCloseDialog();
-      } else {
-        toast.error(response.message || 'Failed to collect payment');
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to collect payment');
-      console.error('Collection error:', error);
-    }
-  };
+  // const handleCollect = async () => {
+  //   if (!selectedAccount || !amount || !selectedAccount.account_id) return;
+  //   try {
+  //     const response = await collectPaymentMutation.mutateAsync({
+  //       accountId: selectedAccount.account_id,
+  //       amount: parseFloat(amount)
+  //     });
+  //     if (response.success) {
+  //       toast.success(`Successfully collected ₹${amount} from ${selectedAccount.account_holder}`);
+  //       handleCloseDialog();
+  //     } else {
+  //       toast.error(response.message || 'Failed to collect payment');
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error?.response?.data?.message || 'Failed to collect payment');
+  //     console.error('Collection error:', error);
+  //   }
+  // };
 
   const columns: ColumnDefinition<AssignedAccount>[] = [
     {
@@ -92,6 +82,18 @@ const Collections: React.FC = () => {
       id: 'account_no',
       label: 'Account No',
       sortable: true,
+    },
+    {
+      id: 'member_id',
+      label: 'Member ID',
+      sortable: true,
+      renderCell: (row) => row.member_id || '-',
+    },
+    {
+      id: 'account_id',
+      label: 'Account ID',
+      sortable: true,
+      renderCell: (row) => row.account_id || '-',
     },
     {
       id: 'account_holder',
@@ -163,34 +165,34 @@ const Collections: React.FC = () => {
         );
       },
     },
-    {
-      id: 'account_id',
-      label: 'Action',
-      align: 'center',
-      renderCell: (row) => (
-        row.account_type === 'Member Profile' ? (
-          <Chip label="Profile Only" size="small" variant="outlined" />
-        ) : (
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              textTransform: 'none',
-              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-              },
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenDialog(row);
-            }}
-          >
-            Collect
-          </Button>
-        )
-      ),
-    },
+    // {
+    //   id: 'account_id',
+    //   label: 'Action',
+    //   align: 'center',
+    //   renderCell: (row) => (
+    //     row.account_type === 'Member Profile' ? (
+    //       <Chip label="Profile Only" size="small" variant="outlined" />
+    //     ) : (
+    //       <Button
+    //         variant="contained"
+    //         size="small"
+    //         sx={{
+    //           textTransform: 'none',
+    //           background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+    //           '&:hover': {
+    //             background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+    //           },
+    //         }}
+    //         onClick={(e) => {
+    //           e.stopPropagation();
+    //           handleOpenDialog(row);
+    //         }}
+    //       >
+    //         Collect
+    //       </Button>
+    //     )
+    //   ),
+    // },
   ];
 
   return (
@@ -242,7 +244,7 @@ const Collections: React.FC = () => {
         <AdminReusableTable
           columns={columns}
           data={accounts}
-          title={typeFilter ? `${typeFilter} Accounts` : 'List Of Collections'}
+          title={typeFilter ? `${typeFilter} Accounts` : 'List Of Members'}
           isLoading={isLoading}
           emptyMessage={typeFilter ? `No ${typeFilter} accounts found` : 'No assigned accounts found'}
           onExport={() => {
@@ -251,114 +253,6 @@ const Collections: React.FC = () => {
           }}
         />
       </Box>
-
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          pb: 1,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottom: '1px solid #e0e0e0'
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Collect Payment
-          </Typography>
-          <IconButton
-            onClick={handleCloseDialog}
-            size="small"
-            sx={{
-              color: 'text.secondary',
-              '&:hover': { color: 'text.primary' }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 3, pb: 2 }}>
-          {selectedAccount && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Account Details
-              </Typography>
-              <Box sx={{
-                p: 2,
-                bgcolor: '#f5f5f5',
-                borderRadius: 1,
-                mb: 3
-              }}>
-                <Typography variant="body2">
-                  <strong>Account No:</strong> {selectedAccount.account_no}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Account Holder:</strong> {selectedAccount.account_holder}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Balance:</strong> ₹ {selectedAccount.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-
-          <TextField
-            label="Amount"
-            type="number"
-            fullWidth
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter collection amount"
-            InputProps={{
-              startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 1,
-              }
-            }}
-          />
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
-          <Button
-            onClick={handleCloseDialog}
-            variant="outlined"
-            sx={{
-              textTransform: 'none',
-              borderRadius: 1,
-              px: 3
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCollect}
-            variant="contained"
-            disabled={!amount || parseFloat(amount) <= 0 || collectPaymentMutation.isPending}
-            sx={{
-              textTransform: 'none',
-              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-              },
-              borderRadius: 1,
-              px: 3
-            }}
-          >
-            {collectPaymentMutation.isPending ? 'Collecting...' : 'Collect'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };
