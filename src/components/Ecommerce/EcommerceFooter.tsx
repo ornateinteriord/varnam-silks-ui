@@ -62,9 +62,9 @@ const EcommerceFooter = () => {
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, fontSize: '1rem' }}>
               NEWSLETTER
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Box component="input" placeholder="Your email address" sx={{ flexGrow: 1, p: 1.5, border: 'none', borderRadius: 1, outline: 'none', backgroundColor: '#333', color: '#fff' }} />
-              <Button variant="contained" sx={{ backgroundColor: '#b30000', '&:hover': { backgroundColor: '#800000' } }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+              <Box component="input" placeholder="Your email address" sx={{ flexGrow: 1, p: 1.5, border: 'none', borderRadius: 1, outline: 'none', backgroundColor: '#333', color: '#fff', width: '100%' }} />
+              <Button variant="contained" sx={{ backgroundColor: '#b30000', whiteSpace: 'nowrap', '&:hover': { backgroundColor: '#800000' } }}>
                 Subscribe
               </Button>
             </Box>

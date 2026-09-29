@@ -487,7 +487,7 @@ const AccountOpeningForm: React.FC<Props> = ({
         branch_id: memberInfo.branch_id,
         date_of_opening: form.openingDate,
         member_id: memberId,
-        account_type: accountGroupId || (isRD ? 'AGP003' : form.accountType), // Send account_group_id
+        account_type: accountGroupId || form.accountType,
         account_operation: form.accountOperation,
         introducer: form.introducer,
         entered_by: memberInfo.entered_by || '', // From logged-in user
@@ -806,13 +806,14 @@ const AccountOpeningForm: React.FC<Props> = ({
                         label="Account Type"
                         value={form.accountType || defaultAccountType?.toUpperCase() || ''}
                         onChange={(e) => {
+                          // Only allow changing if no defaultAccountType is locked in
+                          if (defaultAccountType) return;
                           if (!isUser) handleChange('accountType', e.target.value);
                           else navigate(`/user/account-opening/${e.target.value.toLowerCase()}`);
                         }}
-                        readOnly={isUser}
-                        inputProps={{ readOnly: isUser }}
+                        inputProps={{ readOnly: !!defaultAccountType || isUser }}
                       >
-                        {isUser ? (
+                        {(isUser || !!defaultAccountType) ? (
                           <MenuItem value={defaultAccountType?.toUpperCase()}>
                             {defaultAccountType?.toUpperCase()}
                           </MenuItem>
@@ -888,10 +889,17 @@ const AccountOpeningForm: React.FC<Props> = ({
                               const amt = e.target.value;
                               let dur = '';
                               let maturity = '';
+                              let maturityDate = '';
 
                               if (amt === '100') {
                                 dur = '120';
                                 maturity = '15000';
+                                // Calculate maturity date: opening date + 120 months
+                                if (form.openingDate) {
+                                  const d = new Date(form.openingDate);
+                                  d.setMonth(d.getMonth() + 120);
+                                  maturityDate = d.toISOString().split('T')[0];
+                                }
                               }
                               
                               setForm((prev: any) => ({
@@ -899,7 +907,8 @@ const AccountOpeningForm: React.FC<Props> = ({
                                 amount: amt,
                                 duration: dur,
                                 interestSlab: dur ? `${amt}-${dur}` : '',
-                                maturityValue: maturity
+                                maturityValue: maturity,
+                                maturityDate,
                               }));
                             }}
                           >
@@ -940,11 +949,19 @@ const AccountOpeningForm: React.FC<Props> = ({
                                   if (dur === '120') maturity = '15000';
                                 }
                                 
+                                let maturityDate = '';
+                                if (form.openingDate) {
+                                  const d = new Date(form.openingDate);
+                                  d.setMonth(d.getMonth() + parseInt(dur));
+                                  maturityDate = d.toISOString().split('T')[0];
+                                }
+                                
                                 setForm((prev: any) => ({
                                   ...prev,
                                   duration: dur,
                                   interestSlab: `${amt}-${dur}`,
-                                  maturityValue: maturity
+                                  maturityValue: maturity,
+                                  maturityDate,
                                 }));
                               }}
                             >
@@ -1034,6 +1051,21 @@ const AccountOpeningForm: React.FC<Props> = ({
                         size="small"
                         value={form.maturityValue}
                         InputProps={{ readOnly: true }}
+                        sx={readOnlyInputStyle}
+                      />
+                    </Grid>
+                  )}
+
+                  {isRD && form.maturityDate && (
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        label="Maturity Date"
+                        type="date"
+                        fullWidth
+                        size="small"
+                        value={form.maturityDate}
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
                         sx={readOnlyInputStyle}
                       />
                     </Grid>

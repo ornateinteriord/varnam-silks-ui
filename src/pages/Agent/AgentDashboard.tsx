@@ -514,7 +514,7 @@ const AgentDashboard = () => {
                   }}
                   startIcon={<MonetizationOnIcon />}
                 >
-                  Collect Payment
+                  My Members
                 </Button>
                 <Button
                   variant="outlined"

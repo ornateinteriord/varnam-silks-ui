@@ -249,7 +249,7 @@ const ShouldShowFooter = () => {
 
 
 function App() {
-  const [isOpen, setIsOpen] = useState(() => window.innerWidth > 768);
+  const [isOpen, setIsOpen] = useState(() => window.innerWidth >= 1024);
 
   const queryClient = new QueryClient();
 
@@ -305,26 +305,41 @@ const RoutesProvider = ({
         }}
       >
         {!hideSidebar && showSidebar && (
-          <Sidebar
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            role={userRole}
-          />
+          <>
+            {/* Mobile overlay backdrop */}
+            {isOpen && (
+              <div
+                onClick={() => setIsOpen(false)}
+                style={{
+                  display: window.innerWidth < 768 ? 'block' : 'none',
+                  position: 'fixed',
+                  inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  zIndex: 99,
+                  backdropFilter: 'blur(2px)',
+                }}
+              />
+            )}
+            <Sidebar
+              isOpen={isOpen}
+              onClose={() => setIsOpen(false)}
+              role={userRole}
+            />
+          </>
         )}
 
         <div
           className="content-wrapper"
           style={{
             flex: 1,
-            marginLeft: !hideSidebar && showSidebar && isOpen ? "250px" : "0",
-
+            // On mobile (< 768px), sidebar is an overlay — don't shift content
+            marginLeft: !hideSidebar && showSidebar && isOpen && window.innerWidth >= 768 ? "250px" : "0",
             transition: "margin-left 0.3s ease-in-out",
-            width: "100%",
+            width: !hideSidebar && showSidebar && isOpen && window.innerWidth >= 768 ? "calc(100% - 250px)" : "100%",
+            maxWidth: "100%",
             overflowX: "hidden",
-            // Transparent on public pages so Login/Register bg fills the whole screen
             backgroundColor: (hideNavbar || document.body.className.includes("theme-")) ? "transparent" : "#f4f7f9",
             minHeight: "100vh",
-            // No padding offset when navbar is hidden (public pages)
             paddingTop: hideNavbar ? "0" : (!hideSidebar ? (window.innerWidth < 900 ? "56px" : "64px") : "0"),
             paddingBottom: !isAdmin && isLoggedIn ? "10px" : "0"
           }}

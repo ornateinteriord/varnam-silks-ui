@@ -24,7 +24,7 @@ const Collections: React.FC = () => {
   const { data, isLoading } = useGetAssignedAccounts(agentId || '', !!agentId);
   // const collectPaymentMutation = useCollectPayment(agentId || '');
 
-  const allAccounts = data?.data || [];
+  const allAccounts = Array.isArray(data?.data) ? data.data : [];
 
   // Filter accounts by type if filter is specified in URL
   const accounts = useMemo(() => {
@@ -88,12 +88,6 @@ const Collections: React.FC = () => {
       label: 'Member ID',
       sortable: true,
       renderCell: (row) => row.member_id || '-',
-    },
-    {
-      id: 'account_id',
-      label: 'Account ID',
-      sortable: true,
-      renderCell: (row) => row.account_id || '-',
     },
     {
       id: 'account_holder',

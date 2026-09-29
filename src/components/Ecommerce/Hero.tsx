@@ -17,10 +17,10 @@ const Hero = () => {
       >
         <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
         <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', color: '#fff', px: 2 }}>
-          <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 2, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: { xs: '2.5rem', md: '4rem' } }}>
+          <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 2, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: { xs: '1.8rem', sm: '2.5rem', md: '4rem' } }}>
             Exclusive Silk Collection
           </Typography>
-          <Typography variant="h5" sx={{ mb: 4, textShadow: '1px 1px 2px rgba(0,0,0,0.5)', fontSize: { xs: '1.2rem', md: '1.5rem' } }}>
+          <Typography variant="h5" sx={{ mb: 4, textShadow: '1px 1px 2px rgba(0,0,0,0.5)', fontSize: { xs: '0.95rem', sm: '1.2rem', md: '1.5rem' } }}>
             Discover the elegance of traditional and modern sarees
           </Typography>
           <Button onClick={() => window.open('https://varnamsilks.com', '_blank')} variant="contained" size="large" sx={{ backgroundColor: '#b30000', '&:hover': { backgroundColor: '#800000' }, px: 4, py: 1.5, fontSize: '1.1rem' }}>

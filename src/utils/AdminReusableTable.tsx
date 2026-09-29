@@ -399,7 +399,7 @@ const AdminReusableTable = <T extends Record<string, any>>({
   };
 
   const sortedData = useMemo(() => {
-    if (!orderBy) return data;
+    if (!orderBy) return Array.isArray(data) ? data : [];
 
     return [...data].sort((a, b) => {
       const aValue = a[orderBy];
@@ -455,7 +455,7 @@ const AdminReusableTable = <T extends Record<string, any>>({
       // enableExport={enableExport}
       />
 
-      <TableContainer sx={{ maxHeight: 600 }}>
+      <TableContainer sx={{ maxHeight: 600, overflowX: 'auto' }}>
         <Table stickyHeader size="medium">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f8fafc' }}>
