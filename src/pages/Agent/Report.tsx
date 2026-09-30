@@ -8,7 +8,7 @@ const Report: React.FC = () => {
   const agentId = TokenService.getMemberId();
   const { data: transactionsData, isLoading: transactionsLoading } = useGetCollectionTransactions(agentId || '', !!agentId);
 
-  const transactions = transactionsData?.data || [];
+  const transactions = transactionsData?.data?.transactions || [];
 
   // Transaction columns
   const transactionColumns: ColumnDefinition<any>[] = [

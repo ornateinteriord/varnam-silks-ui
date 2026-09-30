@@ -184,6 +184,20 @@ export const useDeleteAgent = () => {
     });
 };
 
+// PROMOTE AGENT (update level)
+export const usePromoteAgent = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ agentId, level }: { agentId: string; level: number }) => {
+            return await useApi<AgentResponse>("PUT", `/admin/promote-agent/${agentId}`, { level });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["agents"] });
+        },
+    });
+};
+
 // GET ALL AGENTS (for dropdowns - no pagination)
 export const useGetAllAgents = (enabled: boolean = true) => {
     return useQuery({

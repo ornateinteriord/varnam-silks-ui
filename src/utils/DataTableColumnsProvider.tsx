@@ -422,9 +422,9 @@ export const getAdminDashboardTableColumns: any = () => [
     sortable: true,
   },
   {
-    name: "Package Amount",
+    name: "Opening Plan Amount",
     selector: (row: any) => {
-      const amt = row.package_value ?? row.spackage ?? row.plan_amount;
+      const amt = row.package_value ?? row.spackage ?? row.plan_amount ?? row.amount;
       return amt ? `₹${amt}` : "-";
     },
     center: true,
@@ -623,11 +623,11 @@ export const getPendingMembersColumns = (
       sortable: true,
     },
     {
-      name: "Package Amount",
-      selector: (row: any) => row.package_value ?? row.spackage ?? row.plan_amount ?? "-",
+      name: "Opening Plan Amount",
+      selector: (row: any) => row.package_value ?? row.spackage ?? row.plan_amount ?? row.amount ?? "-",
       sortable: true,
       cell: (row: any) => {
-        const amt = row.package_value ?? row.spackage ?? row.plan_amount;
+        const amt = row.package_value ?? row.spackage ?? row.plan_amount ?? row.amount;
         return amt ? `₹${amt}` : "-";
       },
     },

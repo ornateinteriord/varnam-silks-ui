@@ -55,9 +55,8 @@ const AgentDashboard = () => {
   // Get commission balance from commission transactions summary
   const totalBalance = commissionData?.data?.summary?.availableBalance || 0;
 
-  // Get collection balance from transactions data (API returns data as an array)
-  const collectionTransactions = transactionsData?.data || [];
-  console.log("Collection transactions data:", transactionsData);
+  // Get collection balance from transactions data
+  const collectionTransactions = transactionsData?.data?.transactions || [];
   const totalCollected = Array.isArray(collectionTransactions) ? collectionTransactions.reduce((sum: number, tx: any) => sum + (tx.credit || 0), 0) : 0;
   const totalPaid = Array.isArray(collectionTransactions) ? collectionTransactions.reduce((sum: number, tx: any) => sum + (tx.debit || 0), 0) : 0;
   const netCollectedAmount = totalCollected - totalPaid;

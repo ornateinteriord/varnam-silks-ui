@@ -203,19 +203,19 @@ const UserDashboard = () => {
           }}
           src={memberDetails?.profile_image || ""}
         >
-          {!memberDetails?.profile_image && (memberDetails?.Name?.[0] || <AccountCircleIcon sx={{ fontSize: 36 }} />)}
+          {!memberDetails?.profile_image && ((memberDetails?.name?.[0] || memberDetails?.Name?.[0]) || <AccountCircleIcon sx={{ fontSize: 36 }} />)}
         </Avatar>
 
         {/* Name + ID + Wallet Info Column */}
         <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: '-0.5px', lineHeight: 1.2, mb: 0.5, fontSize: { xs: '1.2rem', md: '1.5rem' } }}>
-            {memberDetails?.Name || (isMemberLoading ? '...' : '')}
+            {memberDetails?.name || memberDetails?.Name || (isMemberLoading ? '...' : '')}
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, opacity: 0.9, mb: 1.5 }}>
             <VerifiedUserIcon sx={{ fontSize: 14, color: '#10b981' }} />
             <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.5px' }}>
-              ID: {memberDetails?.Member_id || memberId || ''}
+              ID: {memberDetails?.member_id || memberDetails?.Member_id || memberId || ''}
             </Typography>
           </Box>
 

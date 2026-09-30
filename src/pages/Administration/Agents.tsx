@@ -18,7 +18,12 @@ import {
   IconButton,
   Backdrop,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  Divider,
 } from '@mui/material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import BlockIcon from '@mui/icons-material/Block';
@@ -39,6 +44,7 @@ import {
   useCreateAgent,
   useUpdateAgent,
   useDeleteAgent,
+  usePromoteAgent,
   Agent as AgentType
 } from '../../queries/admin/index';
 import { exportToExcel } from '../../utils/excelExport';
@@ -61,6 +67,7 @@ interface Agent {
   aadharcard_no: string;
   introducer: string;
   branch_id: string;
+  level: number;
 }
 
 const Agents: React.FC = () => {
@@ -78,6 +85,11 @@ const Agents: React.FC = () => {
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [promoteDialog, setPromoteDialog] = useState<{
+    open: boolean;
+    agent: Agent | null;
+    newLevel: number;
+  }>({ open: false, agent: null, newLevel: 0 });
   const [resetPasswordDialog, setResetPasswordDialog] = useState<{
     open: boolean;
     targetId: string;
@@ -102,6 +114,7 @@ const Agents: React.FC = () => {
   const createAgentMutation = useCreateAgent();
   const updateAgentMutation = useUpdateAgent();
   const deleteAgentMutation = useDeleteAgent();
+  const promoteAgentMutation = usePromoteAgent();
 
   // Print columns configuration
   const printColumns: PrintColumn[] = [
@@ -146,7 +159,8 @@ const Agents: React.FC = () => {
     pan_no: agent.pan_no || '-',
     aadharcard_no: agent.aadharcard_no || '-',
     introducer: agent.introducer || '-',
-    branch_id: agent.branch_id || '-'
+    branch_id: agent.branch_id || '-',
+    level: typeof agent.level === 'number' ? agent.level : 0,
   })) || [];
 
   const columns = [
@@ -303,6 +317,39 @@ const Agents: React.FC = () => {
       ),
     },
     {
+      id: 'level',
+      label: 'Level',
+      minWidth: 90,
+      align: 'center' as const,
+      renderCell: (row: Agent) => {
+        const levelColors: Record<number, { bg: string; color: string; label: string }> = {
+          0: { bg: '#f1f5f9', color: '#64748b', label: 'L0' },
+          1: { bg: '#dbeafe', color: '#1d4ed8', label: 'L1' },
+          2: { bg: '#d1fae5', color: '#065f46', label: 'L2' },
+          3: { bg: '#fef3c7', color: '#92400e', label: 'L3' },
+          4: { bg: '#ede9fe', color: '#5b21b6', label: 'L4' },
+          5: { bg: '#fee2e2', color: '#991b1b', label: 'L5' },
+          6: { bg: '#fce7f3', color: '#9d174d', label: 'L6' },
+          7: { bg: '#1a237e', color: '#fff', label: 'L7 ★' },
+        };
+        const cfg = levelColors[row.level] || levelColors[0];
+        return (
+          <Chip
+            label={cfg.label}
+            size="small"
+            sx={{
+              backgroundColor: cfg.bg,
+              color: cfg.color,
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              minWidth: 48,
+              borderRadius: 1,
+            }}
+          />
+        );
+      },
+    },
+    {
       id: 'status',
       label: 'Status',
       sortable: true,
@@ -443,6 +490,37 @@ const Agents: React.FC = () => {
             </IconButton>
           )}
         </Stack>
+      ),
+    },
+    {
+      id: 'promote',
+      label: 'Promote',
+      minWidth: 110,
+      align: 'center' as const,
+      renderCell: (row: Agent) => (
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<EmojiEventsIcon sx={{ fontSize: '0.9rem' }} />}
+          onClick={(e) => {
+            e.stopPropagation();
+            setPromoteDialog({ open: true, agent: row, newLevel: row.level });
+          }}
+          sx={{
+            textTransform: 'none',
+            borderRadius: 1,
+            background: 'linear-gradient(135deg, #1a237e 0%, #5b21b6 100%)',
+            fontSize: '0.75rem',
+            px: 1.5,
+            boxShadow: 'none',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #283593 0%, #6d28d9 100%)',
+              boxShadow: '0 2px 8px rgba(91,33,182,0.3)',
+            }
+          }}
+        >
+          Promote
+        </Button>
       ),
     },
   ];
@@ -753,6 +831,126 @@ const Agents: React.FC = () => {
         onPageChange={(newPage) => setPage(newPage + 1)}
         onRowsPerPageChange={handleRowsPerPageChange}
       />
+
+      {/* Promote Agent Dialog */}
+      <Dialog
+        open={promoteDialog.open}
+        onClose={() => setPromoteDialog({ open: false, agent: null, newLevel: 0 })}
+        PaperProps={{ sx: { borderRadius: 3, minWidth: { xs: 300, sm: 420 } } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <EmojiEventsIcon sx={{ color: '#5b21b6' }} />
+            <Typography variant="h6" fontWeight="bold">Promote Agent</Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setPromoteDialog({ open: false, agent: null, newLevel: 0 })}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ pt: 2.5 }}>
+          {promoteDialog.agent && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, p: 2, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+              <Avatar sx={{ bgcolor: getAvatarColor(promoteDialog.agent.name), width: 44, height: 44, fontWeight: 700 }}>
+                {getInitials(promoteDialog.agent.name.split(' (')[0])}
+              </Avatar>
+              <Box>
+                <Typography fontWeight={700} color="#1e293b">{promoteDialog.agent.name.split(' (')[0]}</Typography>
+                <Typography variant="body2" color="#64748b">{promoteDialog.agent.agent_id} • {promoteDialog.agent.designation}</Typography>
+              </Box>
+              <Box sx={{ ml: 'auto', textAlign: 'center' }}>
+                <Typography variant="caption" color="#64748b">Current Level</Typography>
+                <Typography variant="h5" fontWeight={800} color="#1a237e">L{promoteDialog.agent.level}</Typography>
+              </Box>
+            </Box>
+          )}
+
+          <FormControl fullWidth size="small">
+            <InputLabel id="promote-level-label">New Level</InputLabel>
+            <Select
+              labelId="promote-level-label"
+              label="New Level"
+              value={promoteDialog.newLevel}
+              onChange={(e) => setPromoteDialog(prev => ({ ...prev, newLevel: Number(e.target.value) }))}
+            >
+              {[0, 1, 2, 3, 4, 5, 6].map(lvl => (
+                  <MenuItem key={lvl} value={lvl}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Chip
+                        label={`L${lvl}`}
+                        size="small"
+                        sx={{
+                          minWidth: 36,
+                          fontWeight: 700,
+                          fontSize: '0.7rem',
+                          backgroundColor: [
+                            '#f1f5f9', '#dbeafe', '#d1fae5', '#fef3c7',
+                            '#ede9fe', '#fee2e2', '#fce7f3', '#1a237e'
+                          ][lvl],
+                          color: [
+                            '#64748b', '#1d4ed8', '#065f46', '#92400e',
+                            '#5b21b6', '#991b1b', '#9d174d', '#fff'
+                          ][lvl],
+                          borderRadius: 1,
+                        }}
+                      />
+                      <Typography variant="body2">Level {lvl}{lvl === 7 ? ' ★' : ''}</Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+
+          {promoteDialog.agent && promoteDialog.newLevel !== promoteDialog.agent.level && (
+            <Box sx={{ mt: 2, p: 1.5, bgcolor: '#f0fdf4', borderRadius: 2, border: '1px dashed #86efac' }}>
+              <Typography variant="body2" color="#166534" fontWeight={500}>
+                ✓ Will be promoted from Level {promoteDialog.agent.level} → Level {promoteDialog.newLevel}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setPromoteDialog({ open: false, agent: null, newLevel: 0 })}
+            sx={{ borderRadius: 2, textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={
+              promoteAgentMutation.isPending ||
+              !promoteDialog.agent ||
+              promoteDialog.newLevel === promoteDialog.agent?.level
+            }
+            onClick={() => {
+              if (!promoteDialog.agent) return;
+              promoteAgentMutation.mutate(
+                { agentId: promoteDialog.agent.agent_id, level: promoteDialog.newLevel },
+                {
+                  onSuccess: () => {
+                    setSnackbar({ open: true, message: `${promoteDialog.agent!.name.split(' (')[0]} promoted to Level ${promoteDialog.newLevel}`, severity: 'success' });
+                    setPromoteDialog({ open: false, agent: null, newLevel: 0 });
+                  },
+                  onError: (err: any) => {
+                    setSnackbar({ open: true, message: err?.message || 'Failed to promote agent', severity: 'error' });
+                  }
+                }
+              );
+            }}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, #1a237e 0%, #5b21b6 100%)',
+              '&:hover': { background: 'linear-gradient(135deg, #283593 0%, #6d28d9 100%)' }
+            }}
+          >
+            {promoteAgentMutation.isPending ? <CircularProgress size={20} color="inherit" /> : 'Confirm Promote'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Modify Dialog */}
       <AgentModifyDialog

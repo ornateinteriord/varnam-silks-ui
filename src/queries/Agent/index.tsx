@@ -60,19 +60,26 @@ export const useGetCollectionTransactions = (agentId: string, enabled: boolean =
             return await useApi<{
                 success: boolean;
                 message: string;
-                data: Array<{
-                    transaction_id: string;
-                    transaction_date: Date | string;
-                    account_number: string;
-                    Name: string;
-                    credit: number;
-                    debit: number;
-                    balance: number;
-                    status: string;
-                    description: string;
-                    collected_by?: string;
-                    paid_by?: string;
-                }>;
+                data: {
+                    transactions: Array<{
+                        transaction_id: string;
+                        transaction_date: Date | string;
+                        account_number: string;
+                        Name: string;
+                        credit: number;
+                        debit: number;
+                        balance: number;
+                        status: string;
+                        description: string;
+                        collected_by?: string;
+                        paid_by?: string;
+                    }>;
+                    summary: {
+                        totalCollected: number;
+                        totalPaid: number;
+                        netCollectedAmount: number;
+                    };
+                };
             }>("GET", `/agent/get-collection-transactions/${agentId}`);
         },
         enabled: enabled && !!agentId,

@@ -8,7 +8,10 @@ export const useUpdatePassword = () =>{
   return useMutation({
     mutationFn:async(passwordData:any) =>{
       const role = TokenService.getRole();
-      const basePath = role === "AGENT" ? "/agent" : "/admin";
+      let basePath = "/admin";
+      if (role === "AGENT") basePath = "/agent";
+      else if (role === "USER") basePath = "/user";
+      
       return await put(`${basePath}/update-password`,passwordData);
     },
     onSuccess:(response)=>{

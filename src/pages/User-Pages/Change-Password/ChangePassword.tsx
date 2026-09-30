@@ -13,7 +13,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LockIcon from '@mui/icons-material/Lock';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import KeyIcon from '@mui/icons-material/Key';
-import { useUpdateMember } from '../../../api/Memeber';
+import { useUpdatePassword } from '../../../api/Admin';
 import { toast } from 'react-toastify';
 import { LoadingComponent } from '../../../App';
 
@@ -32,7 +32,7 @@ const ChangePassword: React.FC = () => {
     }));
   };
 
-  const updateMember = useUpdateMember();
+  const updatePassword = useUpdatePassword();
 
   const handleSubmit = () => {
     if (!formData.oldPassword || !formData.newPassword || !formData.confirmPassword) {
@@ -43,7 +43,7 @@ const ChangePassword: React.FC = () => {
       toast.error("New password and confirm password do not match!");
       return;
     }
-    updateMember.mutate({ oldPassword: formData.oldPassword, newPassword: formData.newPassword });
+    updatePassword.mutate({ oldPassword: formData.oldPassword, newPassword: formData.newPassword });
   };
 
   return (
@@ -173,7 +173,7 @@ const ChangePassword: React.FC = () => {
           </AccordionDetails>
         </Accordion>
       </CardContent>
-      {updateMember.isPending && <LoadingComponent />}
+      {updatePassword.isPending && <LoadingComponent />}
     </Card>
   );
 };

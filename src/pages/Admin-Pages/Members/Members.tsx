@@ -423,7 +423,7 @@ export const PendingMembers = () => {
                 <Typography variant="body2" fontWeight={600}>{selectedMember?.mobileno || selectedMember?.contactno}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="caption" color="text.secondary">Package Amount</Typography>
+                <Typography variant="caption" color="text.secondary">Opening Plan Amount</Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {selectedMember?.package_value
                     ? `₹${selectedMember.package_value}`
@@ -473,11 +473,11 @@ export const PendingMembers = () => {
           {/* Select Package Amount Entry */}
           {activationType === 'with' && (
             <FormControl fullWidth>
-              <InputLabel id="package-amount-select-label" sx={{ '&.Mui-focused': { color: primaryColor } }}>Package Amount</InputLabel>
+              <InputLabel id="package-amount-select-label" sx={{ '&.Mui-focused': { color: primaryColor } }}>Opening Plan Amount</InputLabel>
               <Select
                 labelId="package-amount-select-label"
                 value={packageAmount}
-                label="Package Amount"
+                label="Opening Plan Amount"
                 onChange={(e) => setPackageAmount(e.target.value as string)}
                 sx={{
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: primaryColor },
@@ -495,7 +495,7 @@ export const PendingMembers = () => {
                 <MenuItem value="3000_24">3000 - 24 Months (Maturity: ₹84,000)</MenuItem>
               </Select>
               <Typography variant="caption" sx={{ mt: 1, ml: 1.5, color: 'text.secondary' }}>
-                Select the package amount to activate this member
+                Select the opening plan amount to activate this member
               </Typography>
             </FormControl>
           )}

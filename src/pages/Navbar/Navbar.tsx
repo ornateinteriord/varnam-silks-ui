@@ -132,14 +132,14 @@ const Navbar = ({ shouldHide, onToggleSidebar }: NavbarProps) => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                   }}
                 >
-                  {memberDetails?.Name?.charAt(0).toUpperCase() || 'U'}
+                  {(memberDetails?.name?.[0] || memberDetails?.Name?.[0] || 'U').toUpperCase()}
                 </Avatar>
                 <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
                   <Typography variant="body2" sx={{ color: 'white', fontWeight: 800, lineHeight: 1.1 }}>
-                    {memberDetails?.Name || "Member"}
+                    {memberDetails?.name || memberDetails?.Name || "Member"}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600, fontSize: '0.65rem' }}>
-                    {memberDetails?.Member_id || ""}
+                    {memberDetails?.member_id || memberDetails?.Member_id || ""}
                   </Typography>
                 </Box>
                 <ChevronDown size={18} color="white" style={{ opacity: 0.8 }} />
@@ -175,15 +175,13 @@ const Navbar = ({ shouldHide, onToggleSidebar }: NavbarProps) => {
                 border: '2px solid #0a2558'
               }}
             >
-              {memberDetails?.Name
-                ? memberDetails.Name.charAt(0).toUpperCase()
-                : ""}
+              {(memberDetails?.name?.[0] || memberDetails?.Name?.[0] || "").toUpperCase()}
             </Avatar>
             <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#0a2558' }}>
-              {memberDetails?.Name || "Member"}
+              {memberDetails?.name || memberDetails?.Name || "Member"}
             </Typography>
             <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>
-               ID: {memberDetails?.Member_id || ""}
+               ID: {memberDetails?.member_id || memberDetails?.Member_id || ""}
             </Typography>
           </div>
 
@@ -198,10 +196,13 @@ const Navbar = ({ shouldHide, onToggleSidebar }: NavbarProps) => {
             onClick={() => {
               const role = TokenService.getRole() || userRole;
               let basePath = "/admin";
-              if (role === "AGENT") basePath = "/agent";
-              else if (role === "ADMIN_01") basePath = "/admin_01";
-              
-              navigate(`${basePath}/update-password`);
+              if (role === "USER") {
+                navigate("/user/account/change-password");
+              } else {
+                if (role === "AGENT") basePath = "/agent";
+                else if (role === "ADMIN_01") basePath = "/admin_01";
+                navigate(`${basePath}/update-password`);
+              }
               setAnchorEl(null);
             }}
           >
