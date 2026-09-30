@@ -66,7 +66,7 @@ export const useGetAllMembersDetails = () =>{
         queryKey:["allMembers"],
         queryFn: async() =>{
             try {
-                const response = await get("/admin/get-members");
+                const response = await get("/admin/get-members?limit=1000000");
                 if (response && response.success) {
                     return response.data || response.members || [];
                 }
