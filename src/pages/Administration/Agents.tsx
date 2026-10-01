@@ -230,11 +230,11 @@ const Agents: React.FC = () => {
       id: 'designation',
       label: 'Designation',
       sortable: true,
-      minWidth: 120,
+      minWidth: 150,
       align: 'center' as const,
       renderCell: (row: Agent) => (
         <Typography variant="body2" sx={{ color: '#1e293b', fontSize: '0.9rem', fontWeight: 500 }}>
-          {row.designation}
+          Lv{row.level} - {row.designation}
         </Typography>
       ),
     },
@@ -323,14 +323,16 @@ const Agents: React.FC = () => {
       align: 'center' as const,
       renderCell: (row: Agent) => {
         const levelColors: Record<number, { bg: string; color: string; label: string }> = {
-          0: { bg: '#f1f5f9', color: '#64748b', label: 'L0' },
-          1: { bg: '#dbeafe', color: '#1d4ed8', label: 'L1' },
-          2: { bg: '#d1fae5', color: '#065f46', label: 'L2' },
-          3: { bg: '#fef3c7', color: '#92400e', label: 'L3' },
-          4: { bg: '#ede9fe', color: '#5b21b6', label: 'L4' },
-          5: { bg: '#fee2e2', color: '#991b1b', label: 'L5' },
-          6: { bg: '#fce7f3', color: '#9d174d', label: 'L6' },
-          7: { bg: '#1a237e', color: '#fff', label: 'L7 ★' },
+          0: { bg: '#f1f5f9', color: '#64748b', label: 'Lv0' },
+          1: { bg: '#dbeafe', color: '#1d4ed8', label: 'Lv1' },
+          2: { bg: '#d1fae5', color: '#065f46', label: 'Lv2' },
+          3: { bg: '#fef3c7', color: '#92400e', label: 'Lv3' },
+          4: { bg: '#ede9fe', color: '#5b21b6', label: 'Lv4' },
+          5: { bg: '#fee2e2', color: '#991b1b', label: 'Lv5' },
+          6: { bg: '#fce7f3', color: '#9d174d', label: 'Lv6' },
+          7: { bg: '#1a237e', color: '#fff', label: 'Lv7' },
+          8: { bg: '#006064', color: '#fff', label: 'Lv8' },
+          9: { bg: '#4a148c', color: '#fff', label: 'Lv9' },
         };
         const cfg = levelColors[row.level] || levelColors[0];
         return (
@@ -492,37 +494,7 @@ const Agents: React.FC = () => {
         </Stack>
       ),
     },
-    {
-      id: 'promote',
-      label: 'Promote',
-      minWidth: 110,
-      align: 'center' as const,
-      renderCell: (row: Agent) => (
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<EmojiEventsIcon sx={{ fontSize: '0.9rem' }} />}
-          onClick={(e) => {
-            e.stopPropagation();
-            setPromoteDialog({ open: true, agent: row, newLevel: row.level });
-          }}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 1,
-            background: 'linear-gradient(135deg, #1a237e 0%, #5b21b6 100%)',
-            fontSize: '0.75rem',
-            px: 1.5,
-            boxShadow: 'none',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #283593 0%, #6d28d9 100%)',
-              boxShadow: '0 2px 8px rgba(91,33,182,0.3)',
-            }
-          }}
-        >
-          Promote
-        </Button>
-      ),
-    },
+
   ];
 
   const getAvatarColor = (name: string) => {

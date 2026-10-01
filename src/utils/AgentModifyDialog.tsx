@@ -174,7 +174,22 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
         }
         setDobError('');
 
-        onSave(formData, isEditMode);
+        const designationToLevel: Record<string, number> = {
+            'Executive': 0,
+            'Team Executive': 1,
+            'Senior Team Executive': 2,
+            'Organizer': 3,
+            'Senior Organizer': 4,
+            'Manager': 5,
+            'Senior Manager': 6,
+            'Senior Development Manager': 7,
+            'Zonal Manager': 8,
+            'Director': 9
+        };
+
+        const level = designationToLevel[formData.designation] || 0;
+
+        onSave({ ...formData, level }, isEditMode);
     };
 
     const isLoading = isFetching || externalLoading;
@@ -237,16 +252,16 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                                     onChange={handleSelectChange}
                                 >
                                     <MenuItem value="">Select Designation</MenuItem>
-                                    <MenuItem value="Executive">Executive</MenuItem>
-                                    <MenuItem value="Team Executive">Team Executive</MenuItem>
-                                    <MenuItem value="Senior Team Executive">Senior Team Executive</MenuItem>
-                                    <MenuItem value="Organizer">Organizer</MenuItem>
-                                    <MenuItem value="Senior Organizer">Senior Organizer</MenuItem>
-                                    <MenuItem value="Manager">Manager</MenuItem>
-                                    <MenuItem value="Senior Manager">Senior Manager</MenuItem>
-                                    <MenuItem value="Senior Development Manager">Senior Development Manager</MenuItem>
-                                    <MenuItem value="Zonal Manager">Zonal Manager</MenuItem>
-                                    <MenuItem value="Director">Director</MenuItem>
+                                    <MenuItem value="Executive">Lv0 - Executive</MenuItem>
+                                    <MenuItem value="Team Executive">Lv1 - Team Executive</MenuItem>
+                                    <MenuItem value="Senior Team Executive">Lv2 - Senior Team Executive</MenuItem>
+                                    <MenuItem value="Organizer">Lv3 - Organizer</MenuItem>
+                                    <MenuItem value="Senior Organizer">Lv4 - Senior Organizer</MenuItem>
+                                    <MenuItem value="Manager">Lv5 - Manager</MenuItem>
+                                    <MenuItem value="Senior Manager">Lv6 - Senior Manager</MenuItem>
+                                    <MenuItem value="Senior Development Manager">Lv7 - Senior Development Manager</MenuItem>
+                                    <MenuItem value="Zonal Manager">Lv8 - Zonal Manager</MenuItem>
+                                    <MenuItem value="Director">Lv9 - Director</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
