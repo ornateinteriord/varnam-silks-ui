@@ -484,11 +484,11 @@ const AccountViewTable: React.FC<Props> = ({ accountType, title }) => {
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Stack direction="row" spacing={1} justifyContent="center">
-                                                    {account.status?.toLowerCase() === 'pending' && (
+                                                    {(account.status?.toLowerCase() === 'pending') && (
                                                         <Button
                                                             variant="contained"
-                                                            color="success"
                                                             size="small"
+                                                            color="success"
                                                             onClick={() => {
                                                                 setAccountToApprove(account);
                                                                 setApproveDialogOpen(true);

@@ -494,7 +494,37 @@ const Agents: React.FC = () => {
         </Stack>
       ),
     },
-
+    {
+      id: 'promote',
+      label: 'Promote',
+      minWidth: 110,
+      align: 'center' as const,
+      renderCell: (row: Agent) => (
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<EmojiEventsIcon sx={{ fontSize: '0.9rem' }} />}
+          onClick={(e) => {
+            e.stopPropagation();
+            setPromoteDialog({ open: true, agent: row, newLevel: row.level });
+          }}
+          sx={{
+            textTransform: 'none',
+            borderRadius: 1,
+            background: 'linear-gradient(135deg, #1a237e 0%, #5b21b6 100%)',
+            fontSize: '0.75rem',
+            px: 1.5,
+            boxShadow: 'none',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #283593 0%, #6d28d9 100%)',
+              boxShadow: '0 2px 8px rgba(91,33,182,0.3)',
+            }
+          }}
+        >
+          Promote
+        </Button>
+      ),
+    },
   ];
 
   const getAvatarColor = (name: string) => {
@@ -845,7 +875,7 @@ const Agents: React.FC = () => {
               value={promoteDialog.newLevel}
               onChange={(e) => setPromoteDialog(prev => ({ ...prev, newLevel: Number(e.target.value) }))}
             >
-              {[0, 1, 2, 3, 4, 5, 6].map(lvl => (
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(lvl => (
                   <MenuItem key={lvl} value={lvl}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                       <Chip
@@ -857,16 +887,18 @@ const Agents: React.FC = () => {
                           fontSize: '0.7rem',
                           backgroundColor: [
                             '#f1f5f9', '#dbeafe', '#d1fae5', '#fef3c7',
-                            '#ede9fe', '#fee2e2', '#fce7f3', '#1a237e'
+                            '#ede9fe', '#fee2e2', '#fce7f3', '#e0f2fe',
+                            '#fef9c3', '#1a237e'
                           ][lvl],
                           color: [
                             '#64748b', '#1d4ed8', '#065f46', '#92400e',
-                            '#5b21b6', '#991b1b', '#9d174d', '#fff'
+                            '#5b21b6', '#991b1b', '#9d174d', '#0369a1',
+                            '#713f12', '#fff'
                           ][lvl],
                           borderRadius: 1,
                         }}
                       />
-                      <Typography variant="body2">Level {lvl}{lvl === 7 ? ' ★' : ''}</Typography>
+                      <Typography variant="body2">Level {lvl}{lvl === 9 ? ' ★ Top' : ''}</Typography>
                     </Box>
                   </MenuItem>
                 ))}
