@@ -36,8 +36,14 @@ const AgentWallet = () => {
 
         // Determine description based on credit/debit
         let description = transaction.description;
-        if (!description) {
-            description = isCredit ? 'Commission Received' : 'Commission Withdrawal';
+        if (!description || description === 'Commission Received') {
+            if (isCredit) {
+                description = (transaction.level === 1 || transaction.level === '1')
+                    ? 'Direct Income'
+                    : (transaction.level ? `Level ${transaction.level} Income` : 'Direct Income');
+            } else {
+                description = 'Commission Withdrawal';
+            }
         }
 
         return {
