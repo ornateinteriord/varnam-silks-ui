@@ -34,26 +34,56 @@ const AgentWallet = () => {
         const isCredit = transaction.status === 'CREDITED' || transaction.status === 'PENDING';
         const amount = transaction.commission_amount || 0;
 
-        // Determine description based on credit/debit
+        // Determine description and category based on credit/debit
         let description = transaction.description;
-        if (!description || description === 'Commission Received') {
-            if (isCredit) {
-                description = (transaction.level === 1 || transaction.level === '1')
-                    ? 'Direct Income'
-                    : (transaction.level ? `Level ${transaction.level} Income` : 'Direct Income');
-            } else {
-                description = 'Commission Withdrawal';
+        let category = transaction.commission_category || '';
+
+        let incomeLabel = 'Direct Income';
+        if (!isCredit || transaction.status === 'WITHDRAWN') {
+            description = 'Commission Withdrawal';
+            incomeLabel = 'Commission Withdrawal';
+            category = 'Withdrawal';
+        } else {
+            if (!category) {
+                if (description && description.includes('Acc Opening')) {
+                    category = 'Acc Opening Comm';
+                } else if (description && description.includes('Monthly')) {
+                    category = 'Monthly Comm';
+                } else {
+                    const level = Number(transaction.level) || 1;
+                    const rate = Number(transaction.commission_rate) || 0;
+                    if (level === 1) {
+                        category = rate >= 20 ? 'Acc Opening Comm' : 'Monthly Comm';
+                    } else if (level <= 6) {
+                        category = rate >= 5 ? 'Acc Opening Comm' : 'Monthly Comm';
+                    } else {
+                        category = rate >= 2 ? 'Acc Opening Comm' : 'Monthly Comm';
+                    }
+                }
             }
+
+            incomeLabel = (transaction.level === 1 || transaction.level === '1')
+                ? 'Direct Income'
+                : (transaction.level ? `Level ${transaction.level} Income` : 'Direct Income');
+
+            description = `${incomeLabel} (${category})`;
         }
+
+        const userId = transaction.source_id || transaction.member_id || (!isCredit ? (transaction.beneficiary_id || agentId) : '');
+        const userName = transaction.source_name || transaction.member_name || (!isCredit ? (transaction.beneficiary_name || agentData?.data?.name || '') : '');
 
         return {
             id: transaction._id || transaction.transaction_id,
             date: new Date(transaction.createdAt || transaction.transaction_date).toLocaleDateString('en-IN'),
             description,
+            incomeLabel,
+            category,
             amount: `${isCredit ? '+ ' : '- '}₹${Math.abs(amount).toFixed(2)}`,
             status: transaction.status || 'Completed',
             isCredit,
-            type: isCredit ? 'commission_received' : 'commission_withdrawal'
+            type: isCredit ? 'commission_received' : 'commission_withdrawal',
+            userId: userId || '-',
+            userName: userName || ''
         };
     };
 
@@ -177,8 +207,9 @@ const AgentWallet = () => {
                         <TableHead sx={{ bgcolor: 'rgba(102, 126, 234, 0.05)' }}>
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Date</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>User ID (Username)</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Description</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Type</TableCell>
+                                {/* <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Type</TableCell> */}
                                 <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Amount</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Status</TableCell>
                             </TableRow>
@@ -191,8 +222,45 @@ const AgentWallet = () => {
                                         '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.02)' }
                                     }}>
                                         <TableCell>{formatted.date}</TableCell>
-                                        <TableCell>{formatted.description}</TableCell>
                                         <TableCell>
+                                            {formatted.userId !== '-' ? (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                                                    <Typography component="span" sx={{ fontWeight: 600, color: '#1f2937', fontSize: '0.875rem' }}>
+                                                        {formatted.userId}
+                                                    </Typography>
+                                                    {formatted.userName ? (
+                                                        <Typography component="span" sx={{ color: '#4b5563', fontSize: '0.875rem' }}>
+                                                            ({formatted.userName})
+                                                        </Typography>
+                                                    ) : null}
+                                                </Box>
+                                            ) : (
+                                                <Typography variant="body2" sx={{ color: '#9ca3af' }}>-</Typography>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                                <Typography component="span" sx={{ fontWeight: 500, color: '#374151', fontSize: '0.875rem' }}>
+                                                    {formatted.incomeLabel}
+                                                </Typography>
+                                                {formatted.category && formatted.category !== 'Withdrawal' && (
+                                                    <Box sx={{
+                                                        display: 'inline-block',
+                                                        px: 1,
+                                                        py: 0.25,
+                                                        borderRadius: '6px',
+                                                        fontSize: '0.72rem',
+                                                        fontWeight: 600,
+                                                        bgcolor: formatted.category === 'Acc Opening Comm' ? 'rgba(79, 70, 229, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                                        color: formatted.category === 'Acc Opening Comm' ? '#4f46e5' : '#059669',
+                                                        border: formatted.category === 'Acc Opening Comm' ? '1px solid rgba(79, 70, 229, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)',
+                                                    }}>
+                                                        {formatted.category}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </TableCell>
+                                        {/* <TableCell>
                                             <Box sx={{
                                                 display: 'inline-block',
                                                 px: 1.5,
@@ -205,7 +273,7 @@ const AgentWallet = () => {
                                             }}>
                                                 {formatted.isCredit ? 'Received' : 'Withdrawal'}
                                             </Box>
-                                        </TableCell>
+                                        </TableCell> */}
                                         <TableCell sx={{
                                             fontWeight: 'bold',
                                             color: formatted.isCredit ? '#16a34a' : '#dc2626'
@@ -220,16 +288,20 @@ const AgentWallet = () => {
                                                 borderRadius: '6px',
                                                 fontSize: '0.75rem',
                                                 fontWeight: 'bold',
-                                                bgcolor: formatted.status === 'Completed' || formatted.status === 'Success'
+                                                bgcolor: formatted.status === 'Completed' || formatted.status === 'Success' || formatted.status === 'CREDITED'
                                                     ? '#dcfce7'
-                                                    : formatted.status === 'Pending'
+                                                    : formatted.status === 'Pending' || formatted.status === 'PENDING'
                                                         ? '#fef9c3'
-                                                        : '#fee2e2',
-                                                color: formatted.status === 'Completed' || formatted.status === 'Success'
+                                                        : formatted.status === 'WITHDRAWN'
+                                                            ? '#e0e7ff'
+                                                            : '#fee2e2',
+                                                color: formatted.status === 'Completed' || formatted.status === 'Success' || formatted.status === 'CREDITED'
                                                     ? '#166534'
-                                                    : formatted.status === 'Pending'
+                                                    : formatted.status === 'Pending' || formatted.status === 'PENDING'
                                                         ? '#854d0e'
-                                                        : '#991b1b',
+                                                        : formatted.status === 'WITHDRAWN'
+                                                            ? '#3730a3'
+                                                            : '#991b1b',
                                             }}>
                                                 {formatted.status}
                                             </Box>

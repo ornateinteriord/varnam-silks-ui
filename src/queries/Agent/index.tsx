@@ -102,8 +102,13 @@ export const useGetAgentCommissionTransactions = (agentId: string, enabled: bool
                         status: 'CREDITED' | 'PENDING' | 'WITHDRAWN';
                         createdAt: Date | string;
                         source?: string;
+                        source_id?: string;
+                        source_name?: string;
                         description?: string;
                         transaction_type?: string;
+                        level?: number;
+                        transaction_id?: string;
+                        transaction_date?: Date | string;
                     }>;
                     summary: {
                         totalEarned: number;
