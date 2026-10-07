@@ -143,24 +143,81 @@ const WithdrawPending: React.FC = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 p: 1.5,
-                backgroundColor: '#f8fafc',
+                backgroundColor: '#f0fdf4',
                 borderRadius: 2,
-                border: '1px solid #e2e8f0'
+                border: '1px solid #bbf7d0'
               }}>
-                <Typography sx={{ color: '#64748b' }}>Requested Amount</Typography>
-                <Typography sx={{ fontWeight: 600 }}>₹{Number(selectedTx?.net_amount || 0).toFixed(2)}</Typography>
+                <Typography sx={{ color: '#047857', fontWeight: 600 }}>Requested Amount</Typography>
+                <Typography sx={{ fontWeight: 700, color: '#059669', fontSize: '1.1rem' }}>
+                  ₹{Number(selectedTx?.net_amount || selectedTx?.ew_debit || 0).toFixed(2)}
+                </Typography>
               </Box>
 
               <Box sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 p: 1.5,
-                backgroundColor: '#f0fdf4',
+                backgroundColor: '#eef2ff',
                 borderRadius: 2,
-                border: '1px solid #bbf7d0'
+                border: '1px solid #c7d2fe'
               }}>
-                <Typography sx={{ color: '#64748b' }}>Member</Typography>
-                <Typography sx={{ fontWeight: 600, color: '#059669' }}>{selectedTx?.member_id}</Typography>
+                <Typography sx={{ color: '#4338ca', fontWeight: 600 }}>Current Balance</Typography>
+                <Typography sx={{ fontWeight: 700, color: '#4f46e5' }}>
+                  ₹{Number(selectedTx?.balance || 0).toFixed(2)}
+                </Typography>
+              </Box>
+
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                p: 1.5,
+                backgroundColor: '#f8fafc',
+                borderRadius: 2,
+                border: '1px solid #e2e8f0'
+              }}>
+                <Typography sx={{ color: '#64748b' }}>User / Member ID</Typography>
+                <Typography sx={{ fontWeight: 600, color: '#1e293b', fontFamily: 'monospace' }}>
+                  {selectedTx?.member_id || '-'}
+                </Typography>
+              </Box>
+
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                p: 1.5,
+                backgroundColor: '#f8fafc',
+                borderRadius: 2,
+                border: '1px solid #e2e8f0'
+              }}>
+                <Typography sx={{ color: '#64748b' }}>Name</Typography>
+                <Typography sx={{ fontWeight: 600, color: '#1e293b' }}>
+                  {selectedTx?.Name || selectedTx?.memberDetails?.name || 'N/A'}
+                </Typography>
+              </Box>
+
+              <Box sx={{
+                p: 1.5,
+                backgroundColor: '#f8fafc',
+                borderRadius: 2,
+                border: '1px solid #e2e8f0'
+              }}>
+                <Typography sx={{ color: '#475569', fontWeight: 600, mb: 1, fontSize: '0.875rem' }}>
+                  Bank Details
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>Account No.</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                      {selectedTx?.memberDetails?.account_number || selectedTx?.account_number || 'Not Provided'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#64748b' }}>IFSC Code</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                      {selectedTx?.memberDetails?.ifsc_code || 'Not Provided'}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
             </Box>
           </Box>

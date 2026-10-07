@@ -99,42 +99,65 @@ const WithdrawalRequests: React.FC = () => {
                             <TableHead sx={{ bgcolor: '#f1f5f9' }}>
                                 <TableRow>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Member Name</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Member ID</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>User / Member Name</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>User ID</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Amount</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Wallet Balance</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Status</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Action</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {requests.map((req: any) => (
-                                    <TableRow key={req._id} hover sx={{ '&:hover': { bgcolor: '#f8fafc' } }}>
-                                        <TableCell sx={{ color: '#334155' }}>
-                                            {new Date(req.requested_date).toLocaleDateString('en-IN', {
-                                                day: '2-digit', month: 'short', year: 'numeric'
-                                            })}
-                                        </TableCell>
-                                        <TableCell sx={{ color: '#334155', fontWeight: 600 }}>
-                                            {req.member_details?.name || 'N/A'}
-                                        </TableCell>
-                                        <TableCell sx={{ color: '#334155', fontWeight: 500 }}>{req.member_id}</TableCell>
-                                        <TableCell sx={{ fontWeight: 700, color: '#059669' }}>
-                                            ₹{req.amount?.toFixed(2)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={req.status}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: req.status === 'Pending' ? '#fef9c3' :
-                                                        req.status === 'Completed' ? '#dcfce7' : '#fee2e2',
-                                                    color: req.status === 'Pending' ? '#854d0e' :
-                                                        req.status === 'Completed' ? '#166534' : '#991b1b',
-                                                    fontWeight: 600,
-                                                    borderRadius: 1
-                                                }}
-                                            />
-                                        </TableCell>
+                                {requests.map((req: any) => {
+                                    const isAgent = req.user_type === 'AGENT' || String(req.member_id || '').startsWith('AG');
+                                    return (
+                                        <TableRow key={req._id} hover sx={{ '&:hover': { bgcolor: '#f8fafc' } }}>
+                                            <TableCell sx={{ color: '#334155' }}>
+                                                {new Date(req.requested_date).toLocaleDateString('en-IN', {
+                                                    day: '2-digit', month: 'short', year: 'numeric'
+                                                })}
+                                            </TableCell>
+                                            <TableCell sx={{ color: '#334155', fontWeight: 600 }}>
+                                                {req.member_details?.name || req.account_holder_name || 'N/A'}
+                                            </TableCell>
+                                            <TableCell sx={{ color: '#334155', fontWeight: 500 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Typography component="span" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.85rem' }}>
+                                                        {req.member_id}
+                                                    </Typography>
+                                                    <Chip
+                                                        label={isAgent ? 'Agent' : 'Member'}
+                                                        size="small"
+                                                        sx={{
+                                                            fontSize: '0.68rem',
+                                                            height: '20px',
+                                                            bgcolor: isAgent ? 'rgba(99, 102, 241, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                                            color: isAgent ? '#4338ca' : '#047857',
+                                                            fontWeight: 600
+                                                        }}
+                                                    />
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 700, color: '#059669' }}>
+                                                ₹{req.amount?.toFixed(2)}
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: '#4f46e5' }}>
+                                                ₹{(req.balance ?? req.member_details?.balance ?? 0).toFixed(2)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={req.status}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: req.status === 'Pending' ? '#fef9c3' :
+                                                            req.status === 'Completed' ? '#dcfce7' : '#fee2e2',
+                                                        color: req.status === 'Pending' ? '#854d0e' :
+                                                            req.status === 'Completed' ? '#166534' : '#991b1b',
+                                                        fontWeight: 600,
+                                                        borderRadius: 1
+                                                    }}
+                                                />
+                                            </TableCell>
                                         <TableCell>
                                             {req.status === 'Pending' && (
                                                 <Button
@@ -162,7 +185,8 @@ const WithdrawalRequests: React.FC = () => {
                                             )}
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                );
+                                })}
                             </TableBody>
                         </Table>
                     </TableContainer>

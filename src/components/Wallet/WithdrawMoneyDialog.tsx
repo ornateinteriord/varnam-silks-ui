@@ -30,7 +30,7 @@ interface WithdrawMoneyDialogProps {
 }
 
 const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose, isCommission = false, availableBalance = 0 }) => {
-    const { data: accountsData, isLoading: accountsLoading } = useGetMyAccounts();
+    const { data: accountsData, isLoading: accountsLoading } = useGetMyAccounts(!isCommission && open);
     const withdrawMutation = useWithdrawRequest();
     const withdrawCommissionMutation = useWithdrawCommission();
 
@@ -59,6 +59,8 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
             toast.error('Please enter a valid amount');
             return;
         }
+        /*
+        // Bank details validation commented out for now - direct amount entry sent to admin
         if (!isCommission) {
             if (!bankAccountNumber.trim()) {
                 toast.error('Please enter bank account number');
@@ -73,6 +75,7 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                 return;
             }
         }
+        */
 
         const selectedAcc = !isCommission ? allAccounts.find((acc: any) => acc._id === selectedAccount) : null;
         if (!isCommission && !selectedAcc) {
@@ -93,11 +96,11 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
             let response;
             if (isCommission) {
                 response = await withdrawCommissionMutation.mutateAsync({
-                    member_id: TokenService.getMemberId() || '', // Ensure we get member ID
+                    member_id: TokenService.getMemberId() || '', // Ensure we get member/agent ID
                     amount: parseFloat(amount),
-                    bank_account_number: 'Registered Bank Account',
-                    ifsc_code: 'N/A',
-                    account_holder_name: 'Registered Member'
+                    bank_account_number: bankAccountNumber || 'N/A',
+                    ifsc_code: ifscCode || 'N/A',
+                    account_holder_name: accountHolderName || 'N/A'
                 });
             } else {
                 response = await withdrawMutation.mutateAsync({
@@ -106,9 +109,9 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                     account_no: selectedAcc.account_no,
                     account_type: selectedAcc.account_type,
                     amount: parseFloat(amount),
-                    bank_account_number: bankAccountNumber,
-                    ifsc_code: ifscCode,
-                    account_holder_name: accountHolderName
+                    bank_account_number: bankAccountNumber || 'N/A',
+                    ifsc_code: ifscCode || 'N/A',
+                    account_holder_name: accountHolderName || 'N/A'
                 });
             }
 
@@ -273,7 +276,8 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                         />
                     </Box>
 
-                    {/* Bank Details Section */}
+                    {/* Bank Details Section - Commented out for now; agent/user enters amount directly */}
+                    {/*
                     {!isCommission && (
                         <Box>
                             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: '#1f2937' }}>
@@ -281,7 +285,6 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                             </Typography>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                {/* Account Holder Name */}
                                 <TextField
                                     fullWidth
                                     label="Account Holder Name"
@@ -295,7 +298,6 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                                     }}
                                 />
 
-                                {/* Bank Account Number */}
                                 <TextField
                                     fullWidth
                                     label="Bank Account Number"
@@ -309,7 +311,6 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                                     }}
                                 />
 
-                                {/* IFSC Code */}
                                 <TextField
                                     fullWidth
                                     label="IFSC Code"
@@ -325,6 +326,7 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                             </Box>
                         </Box>
                     )}
+                    */}
 
                     <Alert severity="info" sx={{ borderRadius: '12px' }}>
                         Withdrawal requests are processed within 2-3 business days.
@@ -354,7 +356,13 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                 <Button
                     onClick={handleWithdraw}
                     variant="contained"
-                    disabled={withdrawing || (!isCommission && !selectedAccount) || !amount || (!isCommission && (!bankAccountNumber || !ifscCode || !accountHolderName))}
+                    disabled={
+                        withdrawing ||
+                        (!isCommission && !selectedAccount) ||
+                        !amount ||
+                        parseFloat(amount || '0') <= 0 ||
+                        (isCommission ? parseFloat(amount || '0') > availableBalance : (selectedAccountData && parseFloat(amount || '0') > selectedAccountData.account_amount))
+                    }
                     sx={{
                         borderRadius: '12px',
                         textTransform: 'none',

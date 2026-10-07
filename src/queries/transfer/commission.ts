@@ -10,9 +10,10 @@ export const useWithdrawCommission = () => {
         mutationFn: async (data: {
             member_id: string;
             amount: number;
-            bank_account_number: string;
-            ifsc_code: string;
-            account_holder_name: string;
+            bank_account_number?: string;
+            ifsc_code?: string;
+            account_holder_name?: string;
+            bank_name?: string;
         }) => {
             return await useApi<{
                 success: boolean;
@@ -21,8 +22,10 @@ export const useWithdrawCommission = () => {
             }>("POST", "/transaction/withdraw-commission", data);
         },
         onSuccess: () => {
-            // Invalidate commission transactions to refresh balance
+            // Invalidate commission transactions and withdrawal requests to refresh balance
             queryClient.invalidateQueries({ queryKey: ["memberCommissionTransactions"] });
+            queryClient.invalidateQueries({ queryKey: ["agentCommissionTransactions"] });
+            queryClient.invalidateQueries({ queryKey: ["withdrawalRequests"] });
         },
     });
 };

@@ -22,7 +22,6 @@ import {
   SmsIcon,
   PercentIcon,
 } from "../Icons";
-import { Pending } from "@mui/icons-material";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { LucideIcons, MuiIcons } from "../Icons";
 
@@ -315,12 +314,14 @@ export const AdminSideBarMenuItems: SideBarMenuItemType[] = [
 
 
 
+  /*
   {
     name: "Withdraw Requests",
     icon: <Pending />,
     path: "/admin/withdraw-pending",
     isExpandable: false,
   },
+  */
   {
     name: "Transactions",
     icon: <ShowChartIcon />,
@@ -381,12 +382,14 @@ export const Admin01SideBarMenuItems: SideBarMenuItemType[] = [
       { name: "Interests", path: "/banking/interestrate", icon: <PercentIcon /> },
     ],
   },
+  /*
   {
     name: "Withdrawal Requests",
     icon: <PaymentsIcon />,
     path: "/admin/withdrawal-requests",
     isExpandable: false,
   },
+  */
   {
     name: "Agent Assignment",
     icon: <LucideIcons.ClipboardCheck />,

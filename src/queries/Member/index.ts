@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useApi from "../useApi";
+import TokenService from "../token/tokenService";
 import { MemberResponse, MemberAccountsResponse, UpdateMemberRequest, UpdateMemberResponse, MemberTransactionsResponse } from "../../types";
 
 export const useGetMemberById = (memberId: string, enabled: boolean = true) => {
@@ -17,14 +18,16 @@ export const useGetMemberById = (memberId: string, enabled: boolean = true) => {
 
 };
 
-// GET MY ACCOUNTS (for logged-in member)
-export const useGetMyAccounts = () => {
+// GET MY ACCOUNTS (for logged-in member only)
+export const useGetMyAccounts = (enabled: boolean = true) => {
+    const isMember = TokenService.getRole() === "USER";
     return useQuery({
-        queryKey: ["myAccounts",],
+        queryKey: ["myAccounts"],
         queryFn: async () => {
             return await useApi<MemberAccountsResponse>("GET", "/member/get-my-accounts");
         },
-
+        enabled: enabled && isMember,
+        retry: false,
     });
 };
 

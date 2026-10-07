@@ -9,11 +9,20 @@ import {
     Box,
     TextField,
     CircularProgress,
-    Divider
+    Divider,
+    Chip,
+    Grid,
+    Paper,
+    IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import PersonIcon from '@mui/icons-material/Person';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { toast } from 'react-toastify';
 import { useApproveWithdrawal } from '../../../queries/admin/withdrawal';
 import { useGetMemberById } from '../../../queries/Member';
+import { useGetAgentById, useGetAgentCommissionTransactions } from '../../../queries/Agent';
 
 interface PayWithdrawalDialogProps {
     open: boolean;
@@ -26,11 +35,40 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
     const [remarks, setRemarks] = useState('');
     const [processing, setProcessing] = useState(false);
 
-    // Fetch member details to get bank info and mobile number
-    const { data: memberData, isLoading: memberLoading } = useGetMemberById(request?.member_id || '');
-    const member = memberData?.data;
+    // Fetch member and agent details to ensure all bank and profile info is retrieved
+    const { data: memberData, isLoading: memberLoading } = useGetMemberById(request?.member_id || '', !!request?.member_id);
+    const { data: agentData, isLoading: agentLoading } = useGetAgentById(request?.member_id || '', !!request?.member_id);
+    const { data: commTxData } = useGetAgentCommissionTransactions(request?.member_id || '', !!request?.member_id);
 
     if (!request) return null;
+
+    const member = memberData?.data;
+    const agent = agentData?.data;
+    const enriched = request?.member_details;
+
+    const isAgent = request?.user_type === 'AGENT' || !!agent || (!member && String(request?.member_id || '').startsWith('AG'));
+    const userName = member?.name || agent?.name || enriched?.name || request?.account_holder_name || 'N/A';
+    const mobileNo = member?.contactno || agent?.mobile || enriched?.contactno || 'Not Provided';
+    
+    // Balance calculation (use real-time commission availableBalance from agent wallet, request balance, or profile)
+    const balance = commTxData?.data?.summary?.availableBalance ?? request?.balance ?? enriched?.balance ?? (isAgent ? (agent?.commission_balance ?? 0) : 0);
+
+    // Bank Details
+    const bankName = (enriched?.bank_name && enriched?.bank_name !== 'Not Provided' && enriched?.bank_name !== 'N/A')
+        ? enriched?.bank_name
+        : (member?.bank_name || agent?.bank_name || (request?.bank_name && request?.bank_name !== 'N/A' ? request?.bank_name : '') || 'Not Provided');
+
+    const accountNumber = (enriched?.account_number && enriched?.account_number !== 'Not Provided' && enriched?.account_number !== 'N/A')
+        ? enriched?.account_number
+        : (member?.account_number || agent?.account_number || (request?.bank_account_number && request?.bank_account_number !== 'N/A' ? request?.bank_account_number : '') || 'Not Provided');
+
+    const ifscCode = (enriched?.ifsc_code && enriched?.ifsc_code !== 'Not Provided' && enriched?.ifsc_code !== 'N/A')
+        ? enriched?.ifsc_code
+        : (member?.ifsc_code || agent?.ifsc_code || (request?.ifsc_code && request?.ifsc_code !== 'N/A' ? request?.ifsc_code : '') || 'Not Provided');
+
+    const accountHolder = (enriched?.account_holder_name && enriched?.account_holder_name !== 'Not Provided' && enriched?.account_holder_name !== 'N/A')
+        ? enriched?.account_holder_name
+        : (member?.name || agent?.name || (request?.account_holder_name && request?.account_holder_name !== 'N/A' ? request?.account_holder_name : '') || userName);
 
     const handleAction = async (action: 'Pay' | 'Reject') => {
         if (action === 'Reject' && !remarks) {
@@ -51,10 +89,10 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
             });
 
             if (response.success) {
-                toast.success(response.message);
+                toast.success(response.message || (action === 'Pay' ? "Withdrawal payment completed successfully!" : "Withdrawal request rejected"));
                 onClose();
             } else {
-                toast.error(response.message);
+                toast.error(response.message || "Action failed");
             }
         } catch (error: any) {
             toast.error(error?.message || "Action failed");
@@ -63,104 +101,253 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
         }
     };
 
+    const isLoading = memberLoading && agentLoading;
+
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ bgcolor: '#f3f4f6', fontWeight: 'bold' }}>
-                Process Withdrawal Request
-            </DialogTitle>
-            <DialogContent sx={{ mt: 2 }}>
-                {/* Amount Section */}
-                <Box sx={{ textAlign: 'center', py: 2, mb: 2, bgcolor: '#f0fdf4', borderRadius: 2, border: '1px solid #86efac' }}>
-                    <Typography variant="caption" color="text.secondary">Withdrawal Amount</Typography>
-                    <Typography variant="h4" color="success.main" fontWeight="bold">₹{request.amount?.toFixed(2)}</Typography>
-                </Box>
-
-                {/* Bank Details Section */}
-                <Box sx={{
-                    p: 2,
-                    mb: 2,
-                    bgcolor: '#f8fafc',
-                    borderRadius: 2,
-                    border: '1px solid #e2e8f0'
-                }}>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1.5, color: '#1e293b' }}>
-                        Bank Details
-                    </Typography>
-                    {memberLoading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                            <CircularProgress size={24} />
-                        </Box>
-                    ) : (
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 1.5 }}>
-                            <Typography variant="body2" color="text.secondary">Bank Name</Typography>
-                            <Typography variant="body2" fontWeight="600">{member?.bank_name || 'Not Provided'}</Typography>
-
-                            <Typography variant="body2" color="text.secondary">Account Number</Typography>
-                            <Typography variant="body2" fontWeight="600" sx={{ fontFamily: 'monospace' }}>
-                                {member?.account_number || 'Not Provided'}
-                            </Typography>
-
-                            <Typography variant="body2" color="text.secondary">IFSC Code</Typography>
-                            <Typography variant="body2" fontWeight="600" sx={{ fontFamily: 'monospace' }}>
-                                {member?.ifsc_code || 'Not Provided'}
-                            </Typography>
-
-                            <Typography variant="body2" color="text.secondary">Account Holder</Typography>
-                            <Typography variant="body2" fontWeight="600">{member?.name || 'Not Provided'}</Typography>
-                        </Box>
-                    )}
-                </Box>
-
-                {/* Contact Section */}
-                <Box sx={{
-                    p: 2,
-                    mb: 2,
-                    bgcolor: '#eff6ff',
-                    borderRadius: 2,
-                    border: '1px solid #bfdbfe'
-                }}>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1.5, color: '#1e293b' }}>
-                        Contact Information
-                    </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 1.5 }}>
-                        <Typography variant="body2" color="text.secondary">Mobile Number</Typography>
-                        <Typography variant="body2" fontWeight="600">{member?.contactno || 'Not Provided'}</Typography>
-
-                        <Typography variant="body2" color="text.secondary">Member ID</Typography>
-                        <Typography variant="body2" fontWeight="600" sx={{ fontFamily: 'monospace' }}>{request.member_id}</Typography>
+        <Dialog 
+            open={open} 
+            onClose={onClose} 
+            maxWidth="sm" 
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                }
+            }}
+        >
+            <DialogTitle sx={{ 
+                bgcolor: '#4f46e5', 
+                color: 'white', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                py: 2,
+                px: 3
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <AccountBalanceWalletIcon />
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: 'white' }}>
+                            Payable Withdrawal Request
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                            Review details and process payout
+                        </Typography>
                     </Box>
                 </Box>
+                <IconButton onClick={onClose} sx={{ color: 'white' }} size="small">
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
 
-                <Divider sx={{ my: 2 }} />
+            <DialogContent sx={{ p: 3, pt: '20px !important' }}>
+                {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                        <CircularProgress sx={{ color: '#4f46e5' }} />
+                    </Box>
+                ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                        {/* Highlights: Amount & Current Balance */}
+                        <Grid container spacing={2}>
+                            <Grid item xs={6}>
+                                <Paper sx={{
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    bgcolor: 'rgba(16, 185, 129, 0.08)',
+                                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                                    textAlign: 'center'
+                                }} elevation={0}>
+                                    <Typography variant="caption" sx={{ color: '#047857', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                        Withdrawal Amount
+                                    </Typography>
+                                    <Typography variant="h4" sx={{ color: '#059669', fontWeight: 800, mt: 0.5 }}>
+                                        ₹{request.amount?.toFixed(2)}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#059669', fontSize: '0.7rem' }}>
+                                        Amount to pay
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Paper sx={{
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    bgcolor: 'rgba(99, 102, 241, 0.08)',
+                                    border: '1px solid rgba(99, 102, 241, 0.25)',
+                                    textAlign: 'center'
+                                }} elevation={0}>
+                                    <Typography variant="caption" sx={{ color: '#4338ca', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                        Current Balance
+                                    </Typography>
+                                    <Typography variant="h4" sx={{ color: '#4f46e5', fontWeight: 800, mt: 0.5 }}>
+                                        ₹{balance?.toFixed(2)}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#4f46e5', fontSize: '0.7rem' }}>
+                                        Wallet balance
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+                        </Grid>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <TextField
-                        label="Remarks (Optional / Required for Rejection)"
-                        fullWidth
-                        size="small"
-                        multiline
-                        rows={2}
-                        value={remarks}
-                        onChange={(e) => setRemarks(e.target.value)}
-                    />
-                </Box>
+                        {/* User / Agent Information Section */}
+                        <Paper sx={{
+                            p: 2.5,
+                            borderRadius: '12px',
+                            bgcolor: '#f8fafc',
+                            border: '1px solid #e2e8f0'
+                        }} elevation={0}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <PersonIcon sx={{ color: '#6366f1', fontSize: 20 }} />
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                                        User Information
+                                    </Typography>
+                                </Box>
+                                <Chip
+                                    label={isAgent ? 'Agent' : 'Member'}
+                                    size="small"
+                                    sx={{
+                                        fontWeight: 700,
+                                        fontSize: '0.75rem',
+                                        bgcolor: isAgent ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                        color: isAgent ? '#4338ca' : '#047857'
+                                    }}
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>User / Member ID</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontFamily: 'monospace' }}>
+                                        {request.member_id}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Full Name</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                                        {userName}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Mobile Number</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>
+                                        {mobileNo}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Request ID</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#64748b', fontSize: '0.8rem' }}>
+                                        {request.withdraw_request_id || '-'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        {/* Bank Details Section */}
+                        <Paper sx={{
+                            p: 2.5,
+                            borderRadius: '12px',
+                            bgcolor: '#f8fafc',
+                            border: '1px solid #e2e8f0'
+                        }} elevation={0}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                                <AccountBalanceIcon sx={{ color: '#059669', fontSize: 20 }} />
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                                    Bank Details
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Bank Name</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                        {bankName}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Account Holder Name</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                        {accountHolder}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>Account Number</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontFamily: 'monospace' }}>
+                                        {accountNumber}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ color: '#64748b' }}>IFSC Code</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontFamily: 'monospace' }}>
+                                        {ifscCode}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        {/* Remarks Section */}
+                        <Box>
+                            <TextField
+                                label="Remarks (Optional for Approval / Required for Rejection)"
+                                fullWidth
+                                size="small"
+                                multiline
+                                rows={2}
+                                value={remarks}
+                                onChange={(e) => setRemarks(e.target.value)}
+                                placeholder="Enter payment reference, note, or rejection reason..."
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '10px'
+                                    }
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                )}
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
+
+            <Divider />
+
+            <DialogActions sx={{ px: 3, py: 2, gap: 1.5, bgcolor: '#f9fafb' }}>
                 <Button
                     onClick={() => handleAction('Reject')}
                     color="error"
                     variant="outlined"
                     disabled={processing}
+                    sx={{
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        px: 3,
+                        borderColor: '#fca5a5',
+                        '&:hover': {
+                            borderColor: '#ef4444',
+                            bgcolor: '#fef2f2'
+                        }
+                    }}
                 >
-                    Reject
+                    Reject Request
                 </Button>
                 <Button
                     onClick={() => handleAction('Pay')}
-                    color="primary"
                     variant="contained"
                     disabled={processing}
+                    sx={{
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        px: 4,
+                        bgcolor: '#059669',
+                        '&:hover': {
+                            bgcolor: '#047857'
+                        },
+                        boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
+                    }}
                 >
-                    {processing ? <CircularProgress size={24} color="inherit" /> : 'Confirm Payment'}
+                    {processing ? <CircularProgress size={22} sx={{ color: 'white' }} /> : 'Confirm & Pay Now'}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -168,3 +355,4 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
 };
 
 export default PayWithdrawalDialog;
+

@@ -964,12 +964,17 @@ export const useAgentWalletWithdraw = (memberId: any) => {
 
   return useMutation({
     mutationFn: async (data: { memberId: string; amount: string }) => {
-      return await post(`user/agent-withdraw/${memberId}`, data);
+      return await post(`transaction/withdraw-commission`, {
+        member_id: data.memberId || memberId,
+        amount: parseFloat(data.amount)
+      });
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(response.message);
+        toast.success(response.message || "Withdrawal request submitted successfully!");
         queryClient.invalidateQueries({ queryKey: ["agentWalletOverview"] });
+        queryClient.invalidateQueries({ queryKey: ["agentCommissionTransactions"] });
+        queryClient.invalidateQueries({ queryKey: ["withdrawalRequests"] });
         return response.data;
       } else {
         throw new Error(response.message || "Withdrawal failed");
