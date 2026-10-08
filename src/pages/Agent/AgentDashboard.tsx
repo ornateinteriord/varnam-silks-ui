@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Card, CardContent, Typography, Avatar, Button, Grid, Box, CircularProgress, Chip } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 // import PeopleIcon from '@mui/icons-material/People';
@@ -71,8 +72,36 @@ const AgentDashboard = () => {
   // }) || [];
   // const todayCollected = todayTransactions.reduce((sum: number, tx: any) => sum + (tx.credit || 0), 0);
 
-  // Group accounts by type
-  const accountsByType = accountsData?.data?.reduce((acc: any, account: any) => {
+  // Deduplicate accounts so each member appears only once
+  const rawAccounts = Array.isArray(accountsData?.data) ? accountsData.data : [];
+  const uniqueAccounts = useMemo(() => {
+    const seenMembers = new Set<string>();
+    const sorted = [...rawAccounts].sort((a: any, b: any) => {
+      const aIsMember = (a.account_type || '').toLowerCase() === 'member';
+      const bIsMember = (b.account_type || '').toLowerCase() === 'member';
+      if (aIsMember && !bIsMember) return 1;
+      if (!aIsMember && bIsMember) return -1;
+      return 0;
+    });
+
+    const deduplicated: any[] = [];
+    for (const acc of sorted) {
+      const key = acc.member_id || acc.account_no;
+      const normalizedType = (!acc.account_type || acc.account_type.toLowerCase() === 'member') ? 'AGP003' : acc.account_type;
+      const normalizedAcc = { ...acc, account_type: normalizedType };
+
+      if (key && !seenMembers.has(key)) {
+        seenMembers.add(key);
+        deduplicated.push(normalizedAcc);
+      } else if (!key) {
+        deduplicated.push(normalizedAcc);
+      }
+    }
+    return deduplicated;
+  }, [rawAccounts]);
+
+  // Group unique accounts by type
+  const accountsByType = uniqueAccounts.reduce((acc: any, account: any) => {
     const type = account.account_type || 'Other';
     if (!acc[type]) {
       acc[type] = { count: 0, accounts: [] };

@@ -12,7 +12,9 @@ import {
     InputAdornment,
     CircularProgress,
     MenuItem,
-    Alert
+    Alert,
+    Chip,
+    Divider
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -27,9 +29,16 @@ interface WithdrawMoneyDialogProps {
     onClose: () => void;
     isCommission?: boolean;
     availableBalance?: number;
+    isAgent?: boolean;
 }
 
-const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose, isCommission = false, availableBalance = 0 }) => {
+const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({
+    open,
+    onClose,
+    isCommission = false,
+    availableBalance = 0,
+    isAgent
+}) => {
     const { data: accountsData, isLoading: accountsLoading } = useGetMyAccounts(!isCommission && open);
     const withdrawMutation = useWithdrawRequest();
     const withdrawCommissionMutation = useWithdrawCommission();
@@ -40,6 +49,18 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
     const [ifscCode, setIfscCode] = useState('');
     const [accountHolderName, setAccountHolderName] = useState('');
     const [withdrawing, setWithdrawing] = useState(false);
+
+    const isAgentUser = Boolean(
+        isAgent ||
+        TokenService.getRole() === 'AGENT' ||
+        String(TokenService.getMemberId() || '').startsWith('AG')
+    );
+
+    const enteredAmount = parseFloat(amount || '0');
+    const isAgentDeduction = isAgentUser && isCommission;
+    const deductionRate = isAgentDeduction ? 10 : 0;
+    const deductionAmount = isAgentDeduction && enteredAmount > 0 ? (enteredAmount * (deductionRate / 100)) : 0;
+    const netAmount = enteredAmount > 0 ? Math.max(0, enteredAmount - deductionAmount) : 0;
 
     // Flatten all accounts for the dropdown
     const allAccounts = accountsData?.data?.accountTypes?.flatMap((accType: any) =>
@@ -59,23 +80,6 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
             toast.error('Please enter a valid amount');
             return;
         }
-        /*
-        // Bank details validation commented out for now - direct amount entry sent to admin
-        if (!isCommission) {
-            if (!bankAccountNumber.trim()) {
-                toast.error('Please enter bank account number');
-                return;
-            }
-            if (!ifscCode.trim()) {
-                toast.error('Please enter IFSC code');
-                return;
-            }
-            if (!accountHolderName.trim()) {
-                toast.error('Please enter account holder name');
-                return;
-            }
-        }
-        */
 
         const selectedAcc = !isCommission ? allAccounts.find((acc: any) => acc._id === selectedAccount) : null;
         if (!isCommission && !selectedAcc) {
@@ -100,7 +104,8 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                     amount: parseFloat(amount),
                     bank_account_number: bankAccountNumber || 'N/A',
                     ifsc_code: ifscCode || 'N/A',
-                    account_holder_name: accountHolderName || 'N/A'
+                    account_holder_name: accountHolderName || 'N/A',
+                    is_agent: isAgentUser
                 });
             } else {
                 response = await withdrawMutation.mutateAsync({
@@ -274,62 +279,55 @@ const WithdrawMoneyDialog: React.FC<WithdrawMoneyDialogProps> = ({ open, onClose
                                 }
                             }}
                         />
+
+                        {/* 10% Deduction Breakdown for Agent Commission Withdrawal */}
+                        {isAgentDeduction && enteredAmount > 0 && (
+                            <Box sx={{
+                                mt: 2,
+                                p: 2,
+                                borderRadius: '12px',
+                                bgcolor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 1.2
+                            }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Requested Amount:
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                        ₹{enteredAmount.toFixed(2)}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                        <Typography variant="body2" sx={{ color: '#d97706', fontWeight: 500 }}>
+                                            Deduction ({deductionRate}%):
+                                        </Typography>
+                                        <Chip label={`${deductionRate}% Deduction`} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: '#fef3c7', color: '#b45309', fontWeight: 600 }} />
+                                    </Box>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#dc2626' }}>
+                                        - ₹{deductionAmount.toFixed(2)}
+                                    </Typography>
+                                </Box>
+                                <Divider sx={{ my: 0.5 }} />
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="subtitle2" sx={{ color: '#047857', fontWeight: 700 }}>
+                                        Net Amount to Receive:
+                                    </Typography>
+                                    <Typography variant="h6" sx={{ color: '#059669', fontWeight: 800 }}>
+                                        ₹{netAmount.toFixed(2)}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        )}
                     </Box>
 
-                    {/* Bank Details Section - Commented out for now; agent/user enters amount directly */}
-                    {/*
-                    {!isCommission && (
-                        <Box>
-                            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: '#1f2937' }}>
-                                Bank Account Details
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <TextField
-                                    fullWidth
-                                    label="Account Holder Name"
-                                    value={accountHolderName}
-                                    onChange={(e) => setAccountHolderName(e.target.value)}
-                                    placeholder="Enter account holder name"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: '12px',
-                                        }
-                                    }}
-                                />
-
-                                <TextField
-                                    fullWidth
-                                    label="Bank Account Number"
-                                    value={bankAccountNumber}
-                                    onChange={(e) => setBankAccountNumber(e.target.value)}
-                                    placeholder="Enter bank account number"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: '12px',
-                                        }
-                                    }}
-                                />
-
-                                <TextField
-                                    fullWidth
-                                    label="IFSC Code"
-                                    value={ifscCode}
-                                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                                    placeholder="Enter IFSC code"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: '12px',
-                                        }
-                                    }}
-                                />
-                            </Box>
-                        </Box>
-                    )}
-                    */}
-
-                    <Alert severity="info" sx={{ borderRadius: '12px' }}>
-                        Withdrawal requests are processed within 2-3 business days.
+                    <Alert severity={isAgentDeduction ? "warning" : "info"} sx={{ borderRadius: '12px' }}>
+                        {isAgentDeduction
+                            ? `Note: A standard ${deductionRate}% deduction is applied to agent commission withdrawals. You will receive ₹${netAmount.toFixed(2)} in payout.`
+                            : "Withdrawal requests are processed within 2-3 business days."}
                     </Alert>
                 </Box>
             </DialogContent>

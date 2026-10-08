@@ -26,6 +26,7 @@ import { toast } from "react-toastify";
 const AgentWallet = () => {
   const isMobile = useMediaQuery("(max-width:600px)");
   const [amount, setAmount] = useState("");
+  const [deductionAmount, setDeductionAmount] = useState(0);
   const [netAmount, setNetAmount] = useState(0);
   const [optimisticBalance, setOptimisticBalance] = useState<number | null>(null);
 
@@ -55,9 +56,13 @@ const AgentWallet = () => {
 
     if (value && value !== "0") {
       const withdrawalAmount = parseFloat(value);
-      // Agent Withdrawal has 0% deduction
-      setNetAmount(withdrawalAmount);
+      // Agent Withdrawal has 10% deduction
+      const deduction = withdrawalAmount * 0.10;
+      const calculatedNet = withdrawalAmount - deduction;
+      setDeductionAmount(deduction);
+      setNetAmount(calculatedNet);
     } else {
+      setDeductionAmount(0);
       setNetAmount(0);
     }
   };
@@ -92,6 +97,7 @@ const AgentWallet = () => {
       {
         onSuccess: () => {
           setAmount("");
+          setDeductionAmount(0);
           setNetAmount(0);
           refetch();
         },
@@ -233,7 +239,7 @@ const AgentWallet = () => {
               minHeight: "56px",
             }}
           >
-            Commission Withdrawal Request (0% Deduction)
+            Commission Withdrawal Request (10% Deduction)
           </AccordionSummary>
           <AccordionDetails sx={{ p: 3 }}>
             <form
@@ -264,13 +270,28 @@ const AgentWallet = () => {
               />
 
               <TextField
+                label="10% Deduction (TDS/Admin Charges)"
+                value={`- ₹${deductionAmount.toFixed(2)}`}
+                fullWidth
+                InputProps={{ readOnly: true }}
+                sx={{
+                   "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#fff7ed",
+                    color: "#c2410c"
+                   }
+                }}
+              />
+
+              <TextField
                 label="Net Amount to Receive"
                 value={`₹${netAmount.toFixed(2)}`}
                 fullWidth
                 InputProps={{ readOnly: true }}
                 sx={{
                    "& .MuiOutlinedInput-root": {
-                    backgroundColor: "#f1f8e9"
+                    backgroundColor: "#f1f8e9",
+                    fontWeight: 700,
+                    color: "#15803d"
                    }
                 }}
               />
@@ -289,7 +310,7 @@ const AgentWallet = () => {
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     <strong>Withdrawal Policy:</strong>
                   </Typography>
-                  <Typography variant="body2">• 0% TDS / Deduction for Agent Commission</Typography>
+                  <Typography variant="body2">• 10% Deduction applies to Agent Commission Withdrawals</Typography>
                   <Typography variant="body2">• Minimum withdrawal: ₹100</Typography>
                   <Typography variant="body2">• Request will be processed within 24-48 hours</Typography>
                 </Box>

@@ -31,6 +31,10 @@ class TokenService {
     return this.decodeToken()?.role || null;
   }
 
+  static getUserRole(): string | null {
+    return this.getRole();
+  }
+
   static getMemberId(): string | null {
     return this.decodeToken()?.memberId || this.decodeToken()?.userId || null;
   }

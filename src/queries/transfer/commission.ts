@@ -14,6 +14,7 @@ export const useWithdrawCommission = () => {
             ifsc_code?: string;
             account_holder_name?: string;
             bank_name?: string;
+            is_agent?: boolean;
         }) => {
             return await useApi<{
                 success: boolean;

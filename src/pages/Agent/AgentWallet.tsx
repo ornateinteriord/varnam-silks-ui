@@ -76,14 +76,17 @@ const AgentWallet = () => {
             transaction.isCredit === true
         );
 
-        const amount = transaction.commission_amount ?? transaction.amount ?? 0;
+        const rawAmount = Math.abs(transaction.commission_amount ?? transaction.amount ?? 0);
+        const deductionRate = transaction.deduction_rate ?? (isWithdrawal ? 10 : 0);
+        const deductionAmount = transaction.deduction_amount ?? (isWithdrawal ? Math.round((rawAmount * (deductionRate / 100)) * 100) / 100 : 0);
+        const netAmount = transaction.net_amount ?? (isWithdrawal ? Math.round((rawAmount - deductionAmount) * 100) / 100 : rawAmount);
 
         let description = transaction.description;
         let category = transaction.commission_category || transaction.category || '';
         let incomeLabel = 'Direct Income';
 
         if (isWithdrawal) {
-            description = transaction.description || 'Commission Withdrawal';
+            description = transaction.description || `Commission Withdrawal (10% Ded: ₹${deductionAmount.toFixed(2)}, Net: ₹${netAmount.toFixed(2)})`;
             incomeLabel = 'Commission Withdrawal';
             category = 'Withdrawal';
         } else {
@@ -121,7 +124,12 @@ const AgentWallet = () => {
             description,
             incomeLabel,
             category,
-            amount: `${isCredit ? '+ ' : '- '}₹${Math.abs(amount).toFixed(2)}`,
+            amount: `${isCredit ? '+ ' : '- '}₹${rawAmount.toFixed(2)}`,
+            rawAmount,
+            isWithdrawal,
+            deductionRate,
+            deductionAmount,
+            netAmount,
             status: transaction.status || 'Completed',
             isCredit,
             type: isCredit ? 'commission_received' : 'commission_withdrawal',
@@ -221,9 +229,22 @@ const AgentWallet = () => {
                                 ₹{totalBalance.toFixed(2)}
                             </Typography>
                         )}
-                        <Typography variant="body2" sx={{ opacity: 0.7 }}>
-                            Available for withdrawal
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                Available for withdrawal
+                            </Typography>
+                            <Box sx={{
+                                bgcolor: 'rgba(255, 255, 255, 0.2)',
+                                px: 1.2,
+                                py: 0.3,
+                                borderRadius: '12px',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                letterSpacing: 0.3
+                            }}>
+                                10% Deduction Applies
+                            </Box>
+                        </Box>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2, mt: { xs: 3, md: 0 } }}>
                         <Button
@@ -421,7 +442,16 @@ const AgentWallet = () => {
                                             fontWeight: 'bold',
                                             color: formatted.isCredit ? '#16a34a' : '#dc2626'
                                         }}>
-                                            {formatted.amount}
+                                            <Box>
+                                                <Typography component="span" sx={{ fontWeight: 700, color: formatted.isCredit ? '#16a34a' : '#dc2626', fontSize: '0.9rem' }}>
+                                                    {formatted.amount}
+                                                </Typography>
+                                                {formatted.isWithdrawal && formatted.deductionAmount > 0 && (
+                                                    <Typography variant="caption" sx={{ display: 'block', color: '#64748b', fontSize: '0.72rem', mt: 0.2 }}>
+                                                        Net: ₹{formatted.netAmount.toFixed(2)} (-10% ded: ₹{formatted.deductionAmount.toFixed(2)})
+                                                    </Typography>
+                                                )}
+                                            </Box>
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{
@@ -451,6 +481,7 @@ const AgentWallet = () => {
                 onClose={() => setWithdrawDialogOpen(false)}
                 isCommission={true}
                 availableBalance={totalBalance}
+                isAgent={true}
             />
         </Box>
     );

@@ -53,6 +53,17 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
     // Balance calculation (use real-time commission availableBalance from agent wallet, request balance, or profile)
     const balance = commTxData?.data?.summary?.availableBalance ?? request?.balance ?? enriched?.balance ?? (isAgent ? (agent?.commission_balance ?? 0) : 0);
 
+    const grossAmount = request?.amount || 0;
+    const deductionRate = (request?.deduction_rate !== undefined && request?.deduction_rate !== null)
+        ? request?.deduction_rate
+        : (isAgent ? 10 : 0);
+    const deductionAmount = (request?.deduction_amount !== undefined && request?.deduction_amount !== null)
+        ? request?.deduction_amount
+        : (isAgent ? Math.round((grossAmount * (deductionRate / 100)) * 100) / 100 : 0);
+    const netPayable = (request?.net_amount !== undefined && request?.net_amount !== null && request?.net_amount > 0)
+        ? request?.net_amount
+        : Math.round((grossAmount - deductionAmount) * 100) / 100;
+
     // Bank Details
     const bankName = (enriched?.bank_name && enriched?.bank_name !== 'Not Provided' && enriched?.bank_name !== 'N/A')
         ? enriched?.bank_name
@@ -149,28 +160,9 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
                     </Box>
                 ) : (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                        {/* Highlights: Amount & Current Balance */}
+                        {/* Financial Highlights */}
                         <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                <Paper sx={{
-                                    p: 2,
-                                    borderRadius: '12px',
-                                    bgcolor: 'rgba(16, 185, 129, 0.08)',
-                                    border: '1px solid rgba(16, 185, 129, 0.25)',
-                                    textAlign: 'center'
-                                }} elevation={0}>
-                                    <Typography variant="caption" sx={{ color: '#047857', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                                        Withdrawal Amount
-                                    </Typography>
-                                    <Typography variant="h4" sx={{ color: '#059669', fontWeight: 800, mt: 0.5 }}>
-                                        ₹{request.amount?.toFixed(2)}
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#059669', fontSize: '0.7rem' }}>
-                                        Amount to pay
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                            <Grid item xs={6}>
+                            <Grid item xs={12} sm={isAgent ? 4 : 6}>
                                 <Paper sx={{
                                     p: 2,
                                     borderRadius: '12px',
@@ -179,17 +171,78 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
                                     textAlign: 'center'
                                 }} elevation={0}>
                                     <Typography variant="caption" sx={{ color: '#4338ca', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                                        Current Balance
+                                        Gross Request
                                     </Typography>
-                                    <Typography variant="h4" sx={{ color: '#4f46e5', fontWeight: 800, mt: 0.5 }}>
-                                        ₹{balance?.toFixed(2)}
+                                    <Typography variant="h5" sx={{ color: '#312e81', fontWeight: 800, mt: 0.5 }}>
+                                        ₹{grossAmount.toFixed(2)}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#4f46e5', fontSize: '0.7rem' }}>
-                                        Wallet balance
+                                    <Typography variant="caption" sx={{ color: '#6366f1', fontSize: '0.7rem' }}>
+                                        Debited from wallet
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+
+                            {isAgent && (
+                                <Grid item xs={12} sm={4}>
+                                    <Paper sx={{
+                                        p: 2,
+                                        borderRadius: '12px',
+                                        bgcolor: 'rgba(239, 68, 68, 0.08)',
+                                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                                        textAlign: 'center'
+                                    }} elevation={0}>
+                                        <Typography variant="caption" sx={{ color: '#dc2626', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                            10% Deduction
+                                        </Typography>
+                                        <Typography variant="h5" sx={{ color: '#b91c1c', fontWeight: 800, mt: 0.5 }}>
+                                            -₹{deductionAmount.toFixed(2)}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#ef4444', fontSize: '0.7rem' }}>
+                                            TDS / Admin charge
+                                        </Typography>
+                                    </Paper>
+                                </Grid>
+                            )}
+
+                            <Grid item xs={12} sm={isAgent ? 4 : 6}>
+                                <Paper sx={{
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    bgcolor: 'rgba(16, 185, 129, 0.12)',
+                                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                                    textAlign: 'center'
+                                }} elevation={0}>
+                                    <Typography variant="caption" sx={{ color: '#047857', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                        Net Payable
+                                    </Typography>
+                                    <Typography variant="h5" sx={{ color: '#059669', fontWeight: 900, mt: 0.5 }}>
+                                        ₹{netPayable.toFixed(2)}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#059669', fontSize: '0.7rem', fontWeight: 600 }}>
+                                        Actual amount to pay
                                     </Typography>
                                 </Paper>
                             </Grid>
                         </Grid>
+
+                        {/* Balance Strip */}
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            px: 2,
+                            py: 1,
+                            borderRadius: '10px',
+                            bgcolor: '#f1f5f9',
+                            border: '1px dashed #cbd5e1'
+                        }}>
+                            <Typography variant="caption" sx={{ color: '#475569', fontWeight: 500 }}>
+                                Available Wallet Balance: <strong>₹{balance?.toFixed(2)}</strong>
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#475569', fontWeight: 500 }}>
+                                Balance After Withdrawal: <strong>₹{Math.max(0, balance - grossAmount).toFixed(2)}</strong>
+                            </Typography>
+                        </Box>
 
                         {/* User / Agent Information Section */}
                         <Paper sx={{
@@ -297,7 +350,7 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
                                 rows={2}
                                 value={remarks}
                                 onChange={(e) => setRemarks(e.target.value)}
-                                placeholder="Enter payment reference, note, or rejection reason..."
+                                placeholder={isAgent ? `e.g. Paid net ₹${netPayable.toFixed(2)} after 10% deduction (₹${deductionAmount.toFixed(2)})` : "Enter payment reference, note, or rejection reason..."}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: '10px'
@@ -347,7 +400,7 @@ const PayWithdrawalDialog: React.FC<PayWithdrawalDialogProps> = ({ open, onClose
                         boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
                     }}
                 >
-                    {processing ? <CircularProgress size={22} sx={{ color: 'white' }} /> : 'Confirm & Pay Now'}
+                    {processing ? <CircularProgress size={22} sx={{ color: 'white' }} /> : `Confirm & Pay ₹${netPayable.toFixed(2)}`}
                 </Button>
             </DialogActions>
         </Dialog>

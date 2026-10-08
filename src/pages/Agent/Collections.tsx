@@ -16,6 +16,7 @@ const Collections: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const typeFilter = searchParams.get('type');
+  const displayType = typeFilter && typeFilter.toLowerCase() === 'member' ? 'AGP003' : typeFilter;
 
   // const [openDialog, setOpenDialog] = useState(false);
   // const [selectedAccount, setSelectedAccount] = useState<AssignedAccount | null>(null);
@@ -26,11 +27,45 @@ const Collections: React.FC = () => {
 
   const allAccounts = Array.isArray(data?.data) ? data.data : [];
 
+  // Deduplicate accounts so each member appears only once (prefer actual scheme account over generic 'Member' profile)
+  const uniqueAccounts = useMemo(() => {
+    const seenMembers = new Set<string>();
+    
+    // Sort so scheme accounts come before generic 'Member' profiles
+    const sorted = [...allAccounts].sort((a, b) => {
+      const aIsMember = (a.account_type || '').toLowerCase() === 'member';
+      const bIsMember = (b.account_type || '').toLowerCase() === 'member';
+      if (aIsMember && !bIsMember) return 1;
+      if (!aIsMember && bIsMember) return -1;
+      return 0;
+    });
+
+    const deduplicated: AssignedAccount[] = [];
+    for (const acc of sorted) {
+      const key = acc.member_id || acc.account_no;
+      const normalizedType = (!acc.account_type || acc.account_type.toLowerCase() === 'member') ? 'AGP003' : acc.account_type;
+      const normalizedAcc = { ...acc, account_type: normalizedType };
+
+      if (key && !seenMembers.has(key)) {
+        seenMembers.add(key);
+        deduplicated.push(normalizedAcc);
+      } else if (!key) {
+        deduplicated.push(normalizedAcc);
+      }
+    }
+    return deduplicated;
+  }, [allAccounts]);
+
   // Filter accounts by type if filter is specified in URL
   const accounts = useMemo(() => {
-    if (!typeFilter) return allAccounts;
-    return allAccounts.filter((acc: AssignedAccount) => acc.account_type === typeFilter);
-  }, [allAccounts, typeFilter]);
+    if (!typeFilter) return uniqueAccounts;
+    const filtered = uniqueAccounts.filter((acc: AssignedAccount) => acc.account_type === typeFilter);
+    // If filtering by 'Member' or 'AGP003', show unique accounts
+    if (filtered.length === 0 && (typeFilter.toLowerCase() === 'member' || typeFilter === 'AGP003')) {
+      return uniqueAccounts;
+    }
+    return filtered;
+  }, [uniqueAccounts, typeFilter]);
 
   // const handleOpenDialog = (account: AssignedAccount) => {
   //   setSelectedAccount(account);
@@ -98,18 +133,21 @@ const Collections: React.FC = () => {
       id: 'account_type',
       label: 'Account Type',
       sortable: true,
-      renderCell: (row) => (
-        <Chip
-          label={row.account_type || '-'}
-          size="small"
-          sx={{
-            backgroundColor: '#e0e7ff',
-            color: '#4338ca',
-            fontWeight: 600,
-            borderRadius: 1,
-          }}
-        />
-      ),
+      renderCell: (row) => {
+        const typeLabel = (!row.account_type || row.account_type.toLowerCase() === 'member') ? 'AGP003' : row.account_type;
+        return (
+          <Chip
+            label={typeLabel}
+            size="small"
+            sx={{
+              backgroundColor: '#e0e7ff',
+              color: '#4338ca',
+              fontWeight: 600,
+              borderRadius: 1,
+            }}
+          />
+        );
+      },
     },
     {
       id: 'date_of_maturity',
@@ -208,7 +246,7 @@ const Collections: React.FC = () => {
                 Showing accounts for:
               </Typography>
               <Chip
-                label={typeFilter}
+                label={displayType}
                 sx={{
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   color: '#4338ca',
@@ -238,9 +276,9 @@ const Collections: React.FC = () => {
         <AdminReusableTable
           columns={columns}
           data={accounts}
-          title={typeFilter ? `${typeFilter} Accounts` : 'List Of Members'}
+          title={displayType ? `${displayType} Accounts` : 'List Of Members'}
           isLoading={isLoading}
-          emptyMessage={typeFilter ? `No ${typeFilter} accounts found` : 'No assigned accounts found'}
+          emptyMessage={displayType ? `No ${displayType} accounts found` : 'No assigned accounts found'}
           onExport={() => {
             // TODO: Implement export functionality if needed
             console.log('Export accounts');

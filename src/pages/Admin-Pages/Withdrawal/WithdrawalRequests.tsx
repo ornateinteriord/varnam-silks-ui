@@ -101,7 +101,9 @@ const WithdrawalRequests: React.FC = () => {
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Date</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>User / Member Name</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>User ID</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Amount</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Gross Amount</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Deduction</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Net Payable</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Wallet Balance</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Status</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Action</TableCell>
@@ -110,6 +112,15 @@ const WithdrawalRequests: React.FC = () => {
                             <TableBody>
                                 {requests.map((req: any) => {
                                     const isAgent = req.user_type === 'AGENT' || String(req.member_id || '').startsWith('AG');
+                                    const grossAmount = req.amount || 0;
+                                    const deductionRate = (req.deduction_rate !== undefined && req.deduction_rate !== null) ? req.deduction_rate : (isAgent ? 10 : 0);
+                                    const deductionAmount = (req.deduction_amount !== undefined && req.deduction_amount !== null)
+                                        ? req.deduction_amount
+                                        : (isAgent ? Math.round((grossAmount * 0.10) * 100) / 100 : 0);
+                                    const netAmount = (req.net_amount !== undefined && req.net_amount !== null && req.net_amount > 0)
+                                        ? req.net_amount
+                                        : Math.round((grossAmount - deductionAmount) * 100) / 100;
+
                                     return (
                                         <TableRow key={req._id} hover sx={{ '&:hover': { bgcolor: '#f8fafc' } }}>
                                             <TableCell sx={{ color: '#334155' }}>
@@ -138,8 +149,35 @@ const WithdrawalRequests: React.FC = () => {
                                                     />
                                                 </Box>
                                             </TableCell>
-                                            <TableCell sx={{ fontWeight: 700, color: '#059669' }}>
-                                                ₹{req.amount?.toFixed(2)}
+                                            <TableCell sx={{ fontWeight: 600, color: '#334155' }}>
+                                                ₹{grossAmount.toFixed(2)}
+                                            </TableCell>
+                                            <TableCell>
+                                                {deductionAmount > 0 ? (
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#dc2626' }}>
+                                                            -₹{deductionAmount.toFixed(2)}
+                                                        </Typography>
+                                                        <Chip
+                                                            label={`${deductionRate}%`}
+                                                            size="small"
+                                                            sx={{
+                                                                height: '18px',
+                                                                fontSize: '0.65rem',
+                                                                bgcolor: '#fef3c7',
+                                                                color: '#b45309',
+                                                                fontWeight: 700
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+                                                        ₹0.00
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 800, color: '#059669', fontSize: '0.95rem' }}>
+                                                ₹{netAmount.toFixed(2)}
                                             </TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: '#4f46e5' }}>
                                                 ₹{(req.balance ?? req.member_details?.balance ?? 0).toFixed(2)}
