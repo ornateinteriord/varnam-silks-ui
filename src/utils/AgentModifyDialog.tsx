@@ -30,6 +30,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
 import { useGetAgentById } from '../queries/admin/index';
+import { useGetSponserRef } from '../api/Auth';
 
 interface AgentFormData {
     agent_id?: string;
@@ -97,6 +98,42 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
     const [dobError, setDobError] = useState<string>('');
     const [showPassword, setShowPassword] = useState(false);
 
+    // Sponsor / Introducer lookup query
+    const {
+        data: sponsorData,
+        isLoading: isSponsorLoading,
+        isError: isSponsorError,
+        refetch: fetchSponsor
+    } = useGetSponserRef(formData.introducer);
+
+    // Auto-fetch introducer name when introducer code is typed
+    useEffect(() => {
+        const cleanCode = formData.introducer ? formData.introducer.trim() : '';
+        if (cleanCode && cleanCode.length >= 3) {
+            const timer = setTimeout(() => {
+                fetchSponsor();
+            }, 300);
+            return () => clearTimeout(timer);
+        } else if (!cleanCode && !isEditMode) {
+            setFormData(prev => ({ ...prev, introducer_name: '' }));
+        }
+    }, [formData.introducer, fetchSponsor, isEditMode]);
+
+    // Update introducer_name when sponsor query returns result
+    useEffect(() => {
+        if (sponsorData?.data?.name) {
+            setFormData(prev => ({
+                ...prev,
+                introducer_name: sponsorData.data.name
+            }));
+        } else if (isSponsorError) {
+            setFormData(prev => ({
+                ...prev,
+                introducer_name: ''
+            }));
+        }
+    }, [sponsorData, isSponsorError]);
+
     // Update form data when agent data is fetched
     useEffect(() => {
         if (isEditMode && agentData?.data) {
@@ -113,7 +150,7 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                 mobile: agent.mobile || '',
                 branch_id: agent.branch_id || '',
                 introducer: agent.introducer || '',
-                introducer_name: '',
+                introducer_name: agent.introducer_name || '',
                 address: agent.address || '',
                 date_of_joining: agent.date_of_joining ? new Date(agent.date_of_joining).toISOString().split('T')[0] : '',
                 entered_by: agent.entered_by || '',
@@ -371,6 +408,13 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                                 onChange={handleChange}
                                 size="small"
                                 placeholder="Introducer Code"
+                                InputProps={{
+                                    endAdornment: isSponsorLoading ? (
+                                        <InputAdornment position="end">
+                                            <CircularProgress size={20} />
+                                        </InputAdornment>
+                                    ) : null
+                                }}
                             />
                         </Grid>
 
@@ -381,11 +425,16 @@ const AgentModifyDialog: React.FC<AgentModifyDialogProps> = ({
                                 label="Introducer Name"
                                 name="introducer_name"
                                 value={formData.introducer_name}
-                                onChange={handleChange}
                                 size="small"
                                 disabled
                                 sx={{ backgroundColor: '#f5f5f5' }}
-                                placeholder="Introducer Name"
+                                placeholder={isSponsorLoading ? "Fetching name..." : "Introducer Name"}
+                                helperText={
+                                    formData.introducer && !isSponsorLoading && isSponsorError
+                                        ? "Introducer not found"
+                                        : ""
+                                }
+                                error={!!(formData.introducer && !isSponsorLoading && isSponsorError)}
                             />
                         </Grid>
 
